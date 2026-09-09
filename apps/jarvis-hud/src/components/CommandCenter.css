@@ -107,41 +107,120 @@
   animation: jv-spin 720ms linear infinite;
 }
 
-/* ---- activity log ------------------------------------------------------ */
+/* ---- suggestions ------------------------------------------------------- */
 
-.jv-log {
+.jv-suggest {
   display: flex;
-  flex-direction: column-reverse;
-  gap: 4px;
-  /* Fixed height: the footer must not resize as entries arrive, otherwise the
-     side panels get squeezed mid-session. */
-  height: 104px;
-  overflow-y: auto;
-  mask-image: linear-gradient(to top, #000 82%, transparent 100%);
-  font-family: var(--jv-mono);
-  font-size: 10.5px;
-  line-height: 1.55;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
 }
 
-.jv-log__row {
+.jv-suggest__label {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  color: var(--jv-text-faint);
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
+.jv-suggest__chip {
+  padding: 4px 9px;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  border-radius: 100px;
+  white-space: nowrap;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-suggest__chip:hover:not(:disabled) {
+  color: var(--jv-state);
+  border-color: color-mix(in srgb, var(--jv-state) 50%, transparent);
+  background: color-mix(in srgb, var(--jv-state) 8%, transparent);
+  transform: translateY(-1px);
+}
+.jv-suggest__chip:disabled { opacity: 0.35; cursor: not-allowed; }
+.jv-suggest__chip:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+/* ---- last result ------------------------------------------------------- */
+
+/* Always rendered at a fixed height: the answer box must not resize the core
+   and the side panels every time a command returns. */
+.jv-result {
   display: grid;
-  grid-template-columns: 62px 92px 1fr;
-  gap: 10px;
-  padding: 2px 0;
-  animation: jv-log-in 320ms var(--jv-ease) both;
+  gap: 3px;
+  align-content: start;
+  height: 74px;
+  overflow-y: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--jv-panel-border);
+  border-left: 2px solid var(--jv-tone);
+  border-radius: var(--jv-radius);
+  background: rgba(4, 12, 22, 0.5);
+  transition: border-color var(--jv-transition) var(--jv-ease);
 }
 
-@keyframes jv-log-in {
+.jv-result--empty { border-left-color: var(--jv-panel-border); }
+
+.jv-result__placeholder {
+  align-self: center;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--jv-text-faint);
+}
+
+.jv-result__body { animation: jv-result-in 320ms var(--jv-ease) both; display: grid; gap: 3px; }
+
+@keyframes jv-result-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: none; }
 }
 
-.jv-log__time { color: var(--jv-text-faint); }
-.jv-log__source { color: var(--jv-text-dim); letter-spacing: 0.08em; }
-.jv-log__msg { color: var(--jv-text); word-break: break-word; }
+.jv-result__head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+.jv-result__from {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  font-weight: 800;
+  color: var(--jv-tone);
+  white-space: nowrap;
+}
+.jv-result__reply {
+  font-size: 11.5px;
+  color: var(--jv-text);
+  line-height: 1.45;
+}
+.jv-result__detail {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1px;
+  font-family: var(--jv-mono);
+  font-size: 9.5px;
+  color: var(--jv-text-dim);
+  line-height: 1.5;
+}
+.jv-result__detail li::before {
+  content: '· ';
+  color: var(--jv-text-faint);
+}
 
-.jv-log__row--success .jv-log__msg { color: var(--jv-success); }
-.jv-log__row--error .jv-log__msg { color: var(--jv-danger); }
-.jv-log__row--warn .jv-log__msg { color: var(--jv-warning); }
+/* ---- history recall hint ---------------------------------------------- */
 
-.jv-log__empty { color: var(--jv-text-faint); font-size: 10px; letter-spacing: 0.1em; }
+.jv-command__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--jv-mono);
+  font-size: 8.5px;
+  color: var(--jv-text-faint);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}

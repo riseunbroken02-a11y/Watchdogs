@@ -2,9 +2,11 @@
  * ============================================================================
  *  JARVIS HUD — CONFIGURATION
  * ============================================================================
- *  This is the single place to tune the interface.
- *  Change colours, animation speeds, which core shapes are available and which
- *  subsystems are listed — no component code needs to be touched.
+ *  This is the single place to tune the LOOK AND BEHAVIOUR of the interface:
+ *  colours, animation speeds, which core shapes exist, panel timings.
+ *
+ *  The demo CONTENT (services, agents, memories, connectors, events, canned
+ *  command replies) lives separately in `mock.config.ts`.
  * ============================================================================
  */
 
@@ -16,7 +18,7 @@ export const identity = {
   name: 'JARVIS',
   subtitle: 'AIVM-BRAIN COMMAND CENTER',
   /** Shown in the header + the demo banner. */
-  build: 'PHASE 1 · INTERFACE ONLY',
+  build: 'PHASE 2 · MOCK BACKEND',
 } as const;
 
 /* ------------------------------------------------------------------ colours */
@@ -127,23 +129,6 @@ export const telemetry = {
   endpoint: 'http://127.0.0.1:8787/status',
 } as const;
 
-/** System metrics rendered in the SYSTEM STATUS panel. */
-export const systemMetrics = [
-  { id: 'cpu', label: 'CPU', unit: '%', base: 34, drift: 16 },
-  { id: 'ram', label: 'RAM', unit: '%', base: 58, drift: 10, total: '32 GB' },
-  { id: 'storage', label: 'STORAGE', unit: '%', base: 71, drift: 1.5, total: '2 TB' },
-  { id: 'network', label: 'NETWORK', unit: 'Mb/s', base: 42, drift: 30 },
-] as const;
-
-/** AI subsystems rendered in the AI STATUS panel. */
-export const aiModules = [
-  { id: 'aivm-brain', label: 'AIVM-BRAIN', detail: 'knowledge graph · 1.2k nodes' },
-  { id: 'openclaw', label: 'OPENCLAW', detail: 'agent runtime · 3 workers' },
-  { id: 'claude-code', label: 'CLAUDE CODE', detail: 'cli bridge · session active' },
-  { id: 'claude-mem', label: 'CLAUDE-MEM', detail: 'memory store · 418 entries' },
-  { id: 'omniroute', label: 'OMNIROUTE', detail: 'model router · 6 routes' },
-] as const;
-
 /* ----------------------------------------------------------------- command */
 
 export const command = {
@@ -158,6 +143,41 @@ export const command = {
     workingMs: 1800,
     resolveMs: 2200,
   },
+  /** Show the example-command chips above the input. */
+  showSuggestions: true,
+} as const;
+
+/* ------------------------------------------------------------------ voice */
+
+export const voice = {
+  /**
+   * PHASE 2 SAFETY: the microphone is never requested. There is no
+   * getUserMedia, no recording and no speech-to-text anywhere in this app.
+   * Everything the voice UI shows is generated locally.
+   */
+  enabled: true,
+  /** Bars in the visualiser. */
+  barCount: 24,
+  /** How fast the mock transcript types itself out, per word. */
+  transcriptWordMs: 260,
+  /** KeyboardEvent.code held for push-to-talk. Set to '' to disable. */
+  pushToTalkKey: 'Space',
+} as const;
+
+/* ----------------------------------------------------------------- agents */
+
+export const agents = {
+  /** How often the mock agent roster advances, in ms. */
+  tickIntervalMs: 2400,
+} as const;
+
+/* ----------------------------------------------------------------- panels */
+
+export const panels = {
+  /** Rows kept in the event stream view. */
+  eventStreamLimit: 60,
+  /** Memory entries listed before scrolling. */
+  memoryPageSize: 10,
 } as const;
 
 export const config = {
@@ -170,9 +190,10 @@ export const config = {
   coreShapes,
   defaultShape,
   telemetry,
-  systemMetrics,
-  aiModules,
   command,
+  voice,
+  agents,
+  panels,
 };
 
 export default config;

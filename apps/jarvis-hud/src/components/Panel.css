@@ -59,6 +59,22 @@
   transition: background var(--jv-transition) var(--jv-ease);
 }
 
+.jv-panel__head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.jv-panel__toolbar {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--jv-panel-border);
+}
+
+.jv-panel__body--flush {
+  padding: 0;
+}
+
 .jv-panel__aside {
   font-size: 9px;
   letter-spacing: 0.18em;

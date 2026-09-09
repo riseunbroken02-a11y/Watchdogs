@@ -25,7 +25,7 @@ export function StatBar({ label, value, unit, readout }: StatBarProps) {
         <span className="jv-stat__label">{label}</span>
         <span className="jv-stat__value">
           {value.toFixed(unit === '%' ? 0 : 1)}
-          {unit === '%' ? '%' : ` ${unit}`}
+          {unit === '%' ? '%' : ''}
         </span>
       </div>
       <div className="jv-stat__track">

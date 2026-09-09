@@ -1,10 +1,15 @@
+/* Two across: four metrics in two rows instead of four. */
+.jv-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+}
+
 .jv-stat {
   display: grid;
-  gap: 5px;
-  padding: 5px 0;
-}
-.jv-stat + .jv-stat {
-  border-top: 1px solid rgba(56, 189, 248, 0.07);
+  gap: 4px;
+  padding: 3px 0;
+  min-width: 0;
 }
 
 .jv-stat__top {
@@ -12,10 +17,12 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .jv-stat__label {
-  font-size: 10px;
+  font-size: 9.5px;
+  line-height: 1.1;
   letter-spacing: 0.2em;
   color: var(--jv-text-dim);
   font-weight: 600;
@@ -23,7 +30,8 @@
 
 .jv-stat__value {
   font-family: var(--jv-mono);
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.1;
   color: var(--jv-text);
   font-variant-numeric: tabular-nums;
 }
@@ -65,7 +73,11 @@
 
 .jv-stat__readout {
   font-family: var(--jv-mono);
-  font-size: 9px;
+  font-size: 8.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--jv-text-faint);
   letter-spacing: 0.06em;
 }

@@ -6,14 +6,13 @@ import './CoreStage.css';
 interface CoreStageProps {
   shape: CoreShapeId;
   state: CoreState;
-  intensity: number;
 }
 
 /**
  * Renders the currently selected core shape and the state caption underneath.
  * Shapes are swapped by id — adding a new one never touches this file.
  */
-export function CoreStage({ shape, state, intensity }: CoreStageProps) {
+export function CoreStage({ shape, state }: CoreStageProps) {
   const Shape = shapeRegistry[shape];
   const meta = stateMeta[state];
   const shapeLabel = coreShapes.find((s) => s.id === shape)?.label ?? shape.toUpperCase();
@@ -23,10 +22,7 @@ export function CoreStage({ shape, state, intensity }: CoreStageProps) {
       <div
         className="jv-stage__frame"
         style={
-          {
-            '--i': intensity.toFixed(3),
-            '--tempo': animation.speed * stateTempo[state],
-          } as React.CSSProperties
+          { '--tempo': animation.speed * stateTempo[state] } as React.CSSProperties
         }
       >
         <span className="jv-stage__shape-name">CORE // {shapeLabel}</span>
@@ -37,7 +33,7 @@ export function CoreStage({ shape, state, intensity }: CoreStageProps) {
 
         {/* key forces a remount so the entrance animation replays on every swap */}
         <div className="jv-stage__shape" key={shape}>
-          <Shape state={state} intensity={intensity} />
+          <Shape state={state} />
         </div>
 
         <div className="jv-stage__caption">

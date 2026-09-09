@@ -10,15 +10,25 @@ const SAMPLES = 96;
  * The path is written straight to the DOM node so the animation costs no React
  * re-renders.
  */
-export function WaveCore({ intensity, className }: CoreShapeProps) {
+export function WaveCore({ className }: CoreShapeProps) {
   const pathRef = useRef<SVGPathElement | null>(null);
   const ghostRef = useRef<SVGPathElement | null>(null);
-  const intensityRef = useRef(intensity);
-  intensityRef.current = intensity;
+  const intensityRef = useRef(0.32);
 
   useEffect(() => {
     let raf = 0;
     const start = performance.now();
+    let lastSample = 0;
+
+    // --jv-i is animated by the browser; sampling it a few times a second is
+    // plenty and far cheaper than reading computed style every frame.
+    const sampleIntensity = (now: number) => {
+      if (now - lastSample < 120) return;
+      lastSample = now;
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--jv-i');
+      const parsed = Number.parseFloat(raw);
+      if (!Number.isNaN(parsed)) intensityRef.current = parsed;
+    };
 
     const build = (t: number, amp: number, phase: number) => {
       let d = '';
@@ -39,6 +49,7 @@ export function WaveCore({ intensity, className }: CoreShapeProps) {
     };
 
     const tick = (now: number) => {
+      sampleIntensity(now);
       const t = (now - start) / 1000;
       const amp = 12 + intensityRef.current * 52;
       pathRef.current?.setAttribute('d', build(t, amp, 0));

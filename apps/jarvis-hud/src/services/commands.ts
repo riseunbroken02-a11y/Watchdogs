@@ -1,74 +1,92 @@
 /**
  * Command pipeline — SIMULATION ONLY.
  *
- * Phase 1 deliberately performs no real action: no shell, no API, no MCP call.
- * `runCommand` walks the core through LISTENING → THINKING → WORKING →
- * SUCCESS/ERROR purely so the visual states can be demonstrated.
+ * Phase 2 deliberately performs no real action: no shell, no filesystem, no
+ * HTTP, no MCP call. `runCommand` walks the core through
+ * LISTENING → THINKING → WORKING → SUCCESS/ERROR and emits matching events so
+ * the whole HUD reacts as it would with a real backend behind it.
  *
- * WIRING UP FOR REAL LATER: replace the body of `dispatch()` with a call into
- * your OpenClaw / MCP bridge and flip `command.executeForReal` in the config.
+ * WIRING UP FOR REAL LATER: replace the marked block inside `runCommand` with a
+ * call into your OpenClaw / MCP bridge and flip `command.executeForReal` in
+ * src/config/jarvis.config.ts.
  */
 
 import { command as commandConfig } from '../config/jarvis.config';
-import type { CoreState, LogEntry } from '../types';
+import { commandFallback, commandSeeds } from '../config/mock.config';
+import type { CommandResult, CoreState, EventKind } from '../types';
 
-export interface CommandRun {
-  /** Called on every state transition. */
+export interface CommandHooks {
+  /** Called on every core state transition. */
   onState: (state: CoreState) => void;
-  /** Called whenever the simulated pipeline emits a log line. */
-  onLog: (entry: Omit<LogEntry, 'id' | 'time'>) => void;
+  /** Called whenever the pipeline emits an event. */
+  onEvent: (kind: EventKind, source: string, message: string) => void;
+  /** Called when agents should be shown as engaged / released. */
+  onAgents: (phase: 'engage' | 'release', ids: string[], label: string) => void;
 }
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** Deterministic demo responses so the HUD feels alive without doing anything. */
-const responses: { match: RegExp; reply: string; fail?: boolean }[] = [
-  { match: /status|health|report/i, reply: 'All five subsystems reporting nominal. Router latency 34 ms.' },
-  { match: /memory|mem|recall/i, reply: 'CLAUDE-MEM holds 418 entries across 27 topic documents.' },
-  { match: /route|model|omniroute/i, reply: 'OMNIROUTE active routes: 6. Primary lane healthy.' },
-  { match: /deploy|build|ship/i, reply: 'Simulation only — no build pipeline is connected in phase 1.', fail: true },
-  { match: /brain|aivm|graph/i, reply: 'AIVM-BRAIN knowledge graph: 1,204 nodes, 3,870 edges indexed.' },
-];
+/** Suggestion chips shown above the command input. */
+export const exampleCommands: string[] = commandSeeds.map((s) => s.command);
 
-function resolve(input: string): { reply: string; fail: boolean } {
-  const hit = responses.find((r) => r.match.test(input));
-  if (hit) return { reply: hit.reply, fail: Boolean(hit.fail) };
-  return {
-    reply: `Acknowledged: "${input}". Phase 1 is interface-only — no action was performed.`,
-    fail: false,
-  };
+/** Resolves free-form input against the mock handlers. */
+export function resolveCommand(input: string): CommandResult {
+  const hit = commandSeeds.find((s) => s.match.test(input));
+  if (hit) return { reply: hit.reply, ok: !hit.fails, detail: hit.detail };
+  const fallback = commandFallback(input.trim());
+  return { reply: fallback.reply, ok: true, detail: fallback.detail };
 }
 
-export async function runCommand(input: string, run: CommandRun): Promise<void> {
+/** Which agents a command lights up. Cosmetic only. */
+function agentsFor(input: string): string[] {
+  if (/memory|recall/i.test(input)) return ['main', 'memory'];
+  if (/browser|open/i.test(input)) return ['main', 'browser'];
+  if (/project|analy[sz]e|repo/i.test(input)) return ['main', 'claude-code'];
+  if (/agents/i.test(input)) return ['main'];
+  return ['main', 'aivm'];
+}
+
+export async function runCommand(input: string, hooks: CommandHooks): Promise<CommandResult> {
   const { simulation } = commandConfig;
   const trimmed = input.trim();
+  const engaged = agentsFor(trimmed);
 
-  run.onLog({ level: 'info', source: 'OPERATOR', message: trimmed });
+  hooks.onEvent('command', 'OPERATOR', trimmed);
 
-  run.onState('listening');
+  hooks.onState('listening');
   await wait(simulation.listeningMs);
 
-  run.onState('thinking');
-  run.onLog({ level: 'info', source: 'AIVM-BRAIN', message: 'Retrieving context from knowledge graph…' });
+  hooks.onState('thinking');
+  hooks.onAgents('engage', engaged, `Processing: ${trimmed}`);
+  hooks.onEvent('agent-start', 'MAIN AGENT', `Dispatching "${trimmed}" to ${engaged.length} agents`);
+  hooks.onEvent('memory', 'AIVM-BRAIN', 'Retrieving context from knowledge graph');
   await wait(simulation.thinkingMs);
 
-  run.onState('working');
-  run.onLog({ level: 'info', source: 'OPENCLAW', message: 'Dispatching simulated task chain…' });
+  hooks.onState('working');
+  hooks.onEvent('agent-work', 'OPENCLAW', 'Executing simulated task chain');
   await wait(simulation.workingMs);
 
+  // ---------------------------------------------------------------------
+  // REAL EXECUTION WOULD GO HERE (phase 3).
+  // Guard rail: phase 2 ships with executeForReal = false, so this branch is
+  // dead code and no command ever leaves the browser.
+  // ---------------------------------------------------------------------
   if (commandConfig.executeForReal) {
-    // Guard rail: phase 1 ships with executeForReal = false.
-    run.onLog({
-      level: 'warn',
-      source: 'JARVIS',
-      message: 'executeForReal is enabled but no backend is wired up. Nothing was executed.',
-    });
+    hooks.onEvent(
+      'warning',
+      'JARVIS',
+      'executeForReal is enabled but no backend is wired up. Nothing was executed.',
+    );
   }
 
-  const { reply, fail } = resolve(trimmed);
-  run.onState(fail ? 'error' : 'success');
-  run.onLog({ level: fail ? 'error' : 'success', source: 'JARVIS', message: reply });
+  const result = resolveCommand(trimmed);
+
+  hooks.onState(result.ok ? 'success' : 'error');
+  hooks.onAgents('release', engaged, result.ok ? `Completed: ${trimmed}` : `Failed: ${trimmed}`);
+  hooks.onEvent(result.ok ? 'task-complete' : 'error', 'JARVIS', result.reply);
 
   await wait(simulation.resolveMs);
-  run.onState('idle');
+  hooks.onState('idle');
+
+  return result;
 }

@@ -1,0 +1,116 @@
+/* ==========================================================================
+   CORE CONTROL BAR
+   Shape rail + state pills, sitting directly under the core so the centre
+   column stays a single instrument rather than a sidebar of settings.
+   ========================================================================== */
+
+.jv-core-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--jv-panel);
+  border: 1px solid var(--jv-panel-border);
+  border-radius: var(--jv-radius);
+  backdrop-filter: blur(12px);
+}
+
+.jv-core-control__group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.jv-core-control__label {
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  font-weight: 800;
+  color: var(--jv-text-faint);
+  white-space: nowrap;
+}
+
+.jv-core-control__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--jv-panel-border);
+  flex: none;
+}
+
+/* ---- shape rail -------------------------------------------------------- */
+
+.jv-rail { display: flex; gap: 3px; flex-wrap: wrap; }
+
+.jv-rail__btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: var(--jv-radius);
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+
+.jv-rail__btn:hover {
+  color: var(--jv-state);
+  border-color: color-mix(in srgb, var(--jv-state) 45%, transparent);
+  background: color-mix(in srgb, var(--jv-state) 8%, transparent);
+  transform: translateY(-1px);
+}
+
+.jv-rail__btn[aria-pressed='true'] {
+  color: var(--jv-state);
+  border-color: var(--jv-state);
+  background: color-mix(in srgb, var(--jv-state) 14%, transparent);
+  box-shadow: 0 0 20px -6px var(--jv-state);
+}
+
+.jv-rail__btn:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+/* Base style for the shape glyphs (previously in the removed ShapeSelector). */
+.jv-shape-btn__glyph {
+  width: 16px;
+  height: 16px;
+  color: inherit;
+  transition: filter var(--jv-transition) var(--jv-ease);
+}
+.jv-rail__btn:hover .jv-shape-btn__glyph,
+.jv-rail__btn[aria-pressed='true'] .jv-shape-btn__glyph {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--jv-state) 70%, transparent));
+}
+
+/* tooltip with the shape name */
+.jv-rail__btn::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  padding: 3px 7px;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: var(--jv-state);
+  background: var(--jv-bg-elevated);
+  border: 1px solid color-mix(in srgb, var(--jv-state) 35%, transparent);
+  border-radius: 2px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--jv-transition) var(--jv-ease),
+    transform var(--jv-transition) var(--jv-ease);
+}
+.jv-rail__btn:hover::after,
+.jv-rail__btn:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 1100px) {
+  .jv-rail__btn::after { display: none; }
+}

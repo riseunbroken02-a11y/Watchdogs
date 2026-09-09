@@ -1,13 +1,13 @@
-# JARVIS HUD — Phase 1
+# JARVIS HUD — Phase 2
 
-A fully local, interactive command-center interface for the AIVM-BRAIN /
-OpenClaw system.
+A fully local, interactive command center for the AIVM-BRAIN / OpenClaw system.
 
-> **Phase 1 is the interface only.**
-> Every number you see is simulated. The HUD performs **no** API calls, runs
-> **no** commands and touches **no** part of your AIVM-BRAIN, OpenClaw,
-> Claude Code, Claude-Mem or OmniRoute setup. It is a self-contained frontend
-> living in `apps/jarvis-hud/` and nothing outside that folder was changed.
+> **The backend is still MOCK.**
+> Every value in this HUD is generated in the browser. It performs **no** API
+> calls, runs **no** commands, opens **no** connector, reads **no** file and
+> **never requests the microphone**. Nothing in your AIVM-BRAIN, OpenClaw,
+> Claude Code, Claude-Mem, OmniRoute or MCP configuration is read or changed.
+> The whole app lives in `apps/jarvis-hud/`.
 
 ---
 
@@ -21,107 +21,159 @@ npm run dev
 
 Then open **http://127.0.0.1:5173/**
 
-Other scripts:
-
-| Command             | What it does                                  |
-| ------------------- | --------------------------------------------- |
-| `npm run dev`       | Dev server with hot reload (port 5173)        |
-| `npm run build`     | Type-check + production build into `dist/`    |
-| `npm run preview`   | Serve the production build (port 4173)        |
-| `npm run typecheck` | TypeScript only                               |
+| Command             | What it does                                     |
+| ------------------- | ------------------------------------------------ |
+| `npm run dev`       | Dev server with hot reload (port 5173)           |
+| `npm run build`     | Type-check + production build into `dist/`       |
+| `npm run preview`   | Serve the production build (port 4173)           |
+| `npm run lint`      | ESLint over the whole app                        |
+| `npm run typecheck` | TypeScript only                                  |
+| `npm test`          | Vitest unit tests                                |
+| `npm run verify`    | lint + typecheck + tests in one go               |
 
 Requires Node 20.19+ or 22.12+ (built and verified on Node 22).
 
 ---
 
-## What's on screen
+## The dashboard
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│ JARVIS            ● JARVIS ONLINE                     clock / build   │
-├──────────────┬────────────────────────────────┬───────────────────────┤
-│ CORE SHAPE   │                                │ SYSTEM STATUS         │
-│  ORB         │                                │   CPU / RAM /         │
-│  RING        │           ┌─────────┐          │   STORAGE / NETWORK   │
-│  HEXAGON     │           │  CORE   │          ├───────────────────────┤
-│  HOLOGRAM    │           └─────────┘          │ AI STATUS             │
-│  REACTOR     │                                │   AIVM-BRAIN          │
-│  WAVE        │        IDLE | Standing by      │   OPENCLAW            │
-│  MINIMAL     │                                │   CLAUDE CODE         │
-│  CUSTOM      │                                │   CLAUDE-MEM          │
-├──────────────┤                                │   OMNIROUTE           │
-│ CORE STATE   │                                ├───────────────────────┤
-│  6 states    │                                │ ⚠ DEMO DATA           │
-├──────────────┴────────────────────────────────┴───────────────────────┤
-│ ACTIVITY LOG                                                          │
-├───────────────────────────────────────────────────────────────────────┤
-│ >_ Talk to JARVIS...                                       [EXECUTE]  │
-└───────────────────────────────────────────────────────────────────────┘
+┌─ JARVIS ───────────── ● ONLINE ──────────────────── clock / build ─┐
+│ SYSTEM STATUS    │                            │ MEMORY            │
+│  CPU RAM         │                            │  search + filters │
+│  STORAGE NETWORK │        CORE STAGE          │  recent entries   │
+│  6 services      │                            ├───────────────────┤
+├──────────────────┤                            │ CONNECTORS        │
+│ AGENTS           │  [ shape rail | states ]   │  8 integrations   │
+│  6 agents        ├────────────────────────────┼───────────────────┤
+│  task · activity │  ACTIVITY STREAM           │ MOCK DATA notice  │
+├──────────────────┴────────────────────────────┴───────────────────┤
+│ JARVIS answer (fixed height, never shifts the layout)             │
+│ TRY  [ six example commands ]                                     │
+│ [mic][mute][waveform][push to talk]   >_ Talk to JARVIS  [EXECUTE]│
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-### Core shapes
+### 1. Core
 
-Click any entry in **CORE SHAPE** to swap the central core instantly:
+Eight shapes, switchable from the icon rail under the core:
 
-| Shape      | Look                                                      |
-| ---------- | --------------------------------------------------------- |
-| `ORB`      | Glowing volumetric sphere, soft pulse, orbital halo        |
-| `RING`     | Three counter-rotating holographic rings around a core     |
-| `HEXAGON`  | Nested hex lattice, digital edge lines, slow rotation      |
-| `HOLOGRAM` | Translucent projection, scanlines, floating particles      |
-| `REACTOR`  | Layered arc-reactor assembly with rotating housings        |
-| `WAVE`     | Live waveform that swells with activity                    |
-| `MINIMAL`  | One glowing circle, nothing else                           |
-| `CUSTOM`   | Empty slot prepared for your own shape (see below)         |
+| Shape      | Look                                                   |
+| ---------- | ------------------------------------------------------ |
+| `ORB`      | Glowing volumetric sphere with an orbital halo          |
+| `RING`     | Three counter-rotating holographic rings                |
+| `HEXAGON`  | Nested hex lattice with digital edge lines              |
+| `HOLOGRAM` | Translucent projection, scanlines, floating particles   |
+| `REACTOR`  | Layered arc-reactor assembly                            |
+| `WAVE`     | Live waveform that swells with activity                 |
+| `MINIMAL`  | One glowing circle                                      |
+| `CUSTOM`   | Prepared slot for your own shape                        |
 
-### Core states
+Six states, each with its own accent colour, glow and animation tempo:
+`IDLE` · `LISTENING` · `THINKING` · `WORKING` · `SUCCESS` · `ERROR`.
 
-The core changes colour, glow and animation tempo per state. Trigger any of
-them manually from the **CORE STATE** panel:
+Activity intensity rides on the `--jv-i` CSS custom property, registered with
+`@property` so the browser interpolates it. A state change therefore costs one
+React render instead of one per animation frame — which matters now the HUD
+renders five live panels.
 
-| State       | Accent  | Meaning                    |
-| ----------- | ------- | -------------------------- |
-| `IDLE`      | cyan    | Standing by                |
-| `LISTENING` | blue    | Capturing input            |
-| `THINKING`  | violet  | Reasoning over context     |
-| `WORKING`   | amber   | Executing task chain       |
-| `SUCCESS`   | green   | Task completed             |
-| `ERROR`     | red     | Task failed                |
+### 2. Command center
 
-### Command center
+Type and press **Enter** (or click EXECUTE). The core walks
+`LISTENING → THINKING → WORKING → SUCCESS | ERROR → IDLE`, agents light up, the
+activity stream fills, and a mock answer appears above the input.
 
-Type into `Talk to JARVIS...` and press **EXECUTE**. This runs a *simulated*
-pipeline — `LISTENING → THINKING → WORKING → SUCCESS | ERROR → IDLE` — so you
-can watch the core react, with matching lines in the activity log. Try
-`status report`, `memory check`, `route info`, or `deploy now` (that one
-demonstrates the error state).
+- **↑ / ↓** recall previous commands, shell style.
+- Six example commands are offered as chips: *Show system status*,
+  *Analyze project*, *Open browser*, *Check memory*, *Run diagnostics*,
+  *Show active agents*. *Open browser* deliberately fails, so the ERROR state is
+  reachable from the UI.
+- Free-form input is matched by regex against the same handlers; anything
+  unrecognised gets an honest "nothing was executed" answer.
 
-Nothing is sent anywhere. The safety switch is `command.executeForReal` in the
-config, and it is `false`.
+### 3. Voice UI (mock)
+
+Microphone button, listening indicator, 24-bar waveform visualiser, mute /
+unmute, and push-to-talk (hold the button or the **SPACE** key). Releasing
+push-to-talk hands the mock transcript to the command input.
+
+There is deliberately **no `getUserMedia`, no `MediaRecorder` and no
+speech-to-text** anywhere in the app. The waveform is generated by
+`sampleLevels()` and the transcript is drawn from a fixed phrase list.
+
+### 4. System status
+
+Four machine metrics (CPU, RAM, Storage, Network) plus six services — Claude
+Code, OpenClaw, AIVM-BRAIN, Claude-Mem, Headroom and OmniRoute — each carrying
+one of four statuses:
+
+| Status    | Meaning                                        |
+| --------- | ---------------------------------------------- |
+| `ONLINE`  | Reporting normally                             |
+| `OFFLINE` | Not reachable                                  |
+| `WARNING` | Degraded — Headroom carries this in the demo   |
+| `MOCK`    | **Simulated value, no real source attached**   |
+
+In phase 2 no service can report `ONLINE`; a unit test enforces that. Hover any
+row for its detail line.
+
+### 5. Agents
+
+Main Agent, AIVM Agent, Claude Code, OpenClaw, Browser Agent and Memory Agent,
+each showing status, current task, an activity meter and its last action with a
+relative timestamp. The roster drifts on its own and reacts while a command
+runs.
+
+### 6. Memory
+
+Free-text search across title, snippet and source, six category filters, and
+entries stamped with category, source and age. Backed by a local mock store —
+no Claude-Mem database is opened.
+
+### 7. Activity stream
+
+A live feed of command received, agent started, agent working, memory accessed,
+task completed, warning and error events, each with its own glyph and colour.
+Filter by ALL / AGENTS / MEMORY / ALERTS. Ambient events keep arriving so the
+HUD feels alive, and pause while a command is running so its own events stand
+out.
+
+### 8. Connectors
+
+GitHub, Notion, Obsidian, Browser, OpenClaw, AIVM-BRAIN, Claude-Mem and
+OmniRoute, each marked `CONNECTED`, `DISCONNECTED`, `MOCK` or `NOT CONFIGURED`.
+Nothing is authenticated, opened or called — a unit test enforces that no
+connector reports `CONNECTED`.
 
 ---
 
 ## Configuration
 
-Everything tunable lives in **`src/config/jarvis.config.ts`**:
+Two files, deliberately separated:
 
-| Section         | Controls                                                      |
-| --------------- | ------------------------------------------------------------- |
-| `identity`      | Name, subtitle, build tag in the header                       |
-| `palette`       | Background, panel, text and accent colours                    |
-| `stateColors`   | Accent colour per core state                                  |
-| `stateMeta`     | Label + hint text per state                                   |
-| `animation`     | Global speed multiplier, pulse/rotation timing, reduced motion |
-| `stateTempo`    | Per-state animation speed (lower = more agitated)             |
-| `coreShapes`    | Which shapes appear in the selector, and their labels          |
-| `defaultShape`  | Shape shown on first load                                     |
-| `telemetry`     | `mock` vs `live`, poll interval, future endpoint              |
-| `systemMetrics` | The CPU / RAM / STORAGE / NETWORK rows                        |
-| `aiModules`     | The five AI subsystem rows                                    |
-| `command`       | Placeholder, button label, simulation timings, safety switch  |
+**`src/config/jarvis.config.ts`** — look and behaviour.
+
+| Section         | Controls                                                       |
+| --------------- | -------------------------------------------------------------- |
+| `identity`      | Name, subtitle, build tag                                      |
+| `palette`       | Background, panel, text and accent colours                     |
+| `stateColors`   | Accent colour per core state                                   |
+| `stateMeta`     | Label + hint per state                                         |
+| `animation`     | Speed multiplier, pulse/rotation timing, reduced motion         |
+| `stateTempo`    | Per-state animation speed                                      |
+| `coreShapes`    | Which shapes appear in the rail                                |
+| `telemetry`     | `mock` vs `live`, poll interval, future endpoint               |
+| `command`       | Placeholder, button label, simulation timings, safety switch    |
+| `voice`         | Bar count, transcript speed, push-to-talk key                  |
+| `agents`        | Roster tick interval                                           |
+| `panels`        | Event stream limit, memory page size                           |
+
+**`src/config/mock.config.ts`** — all demo content in one place: `MOCK_MODE`,
+metric seeds, service seeds, agent seeds and task pools, memory entries and
+categories, connector seeds, ambient events, and the canned command replies.
 
 Colour and timing values are pushed into CSS custom properties (`--jv-*`) at
-runtime by `src/hooks/useThemeVars.ts`, so a change in the config is reflected
+runtime by `src/hooks/useThemeVars.ts`, so a config change is reflected
 everywhere without touching a stylesheet.
 
 ---
@@ -130,82 +182,89 @@ everywhere without touching a stylesheet.
 
 ```
 apps/jarvis-hud/
-├── index.html
-├── vite.config.ts
 ├── src/
-│   ├── main.tsx                  entry point
-│   ├── App.tsx                   dashboard layout
-│   ├── App.css
+│   ├── App.tsx / App.css          dashboard layout
 │   ├── config/
-│   │   └── jarvis.config.ts      ← the one file you tweak
-│   ├── types/index.ts            shared types (already backend-shaped)
-│   ├── core/
-│   │   ├── CoreStage.tsx         renders the selected shape + state caption
-│   │   ├── CoreStage.css
-│   │   └── shapes/
-│   │       ├── registry.ts       shape id → component
-│   │       ├── shapes.css        all shape styling
-│   │       └── *Core.tsx         the eight shapes
-│   ├── components/               Panel, StatBar, ShapeSelector, StateSelector,
-│   │                             StatusBadge, SystemStatusPanel, AiStatusPanel,
-│   │                             CommandCenter, DemoDataNotice (+ .css each)
+│   │   ├── jarvis.config.ts       look + behaviour
+│   │   └── mock.config.ts         all mock data
+│   ├── types/index.ts             shared types (backend-shaped)
+│   ├── state/
+│   │   ├── JarvisProvider.tsx     provider component
+│   │   └── jarvisContext.ts       context + useJarvis()
 │   ├── hooks/
-│   │   ├── useCoreState.ts       state machine + smoothed intensity
-│   │   ├── useTelemetry.ts       subscribes to the telemetry source
-│   │   ├── useThemeVars.ts       config → CSS custom properties
+│   │   ├── useJarvisSystem.ts     composes every subsystem
+│   │   ├── useCoreState.ts        state machine + --jv-i
+│   │   ├── useTelemetry.ts        telemetry subscription
+│   │   ├── useCommandHistory.ts   ↑/↓ recall
+│   │   ├── useVoice.ts            mock voice (no microphone)
+│   │   ├── useThemeVars.ts        config → CSS custom properties
 │   │   └── useClock.ts
-│   ├── services/
-│   │   ├── telemetry.ts          mock source + seam for the real one
-│   │   └── commands.ts           simulated command pipeline
-│   └── styles/
-│       ├── tokens.css            design tokens
-│       ├── global.css            reset + ambient background
-│       └── compact.css           height-adaptive one-screen fitting
+│   ├── services/                  telemetry · commands · agents · events ·
+│   │                              memory · connectors · voice  (all mock)
+│   ├── core/
+│   │   ├── CoreStage.tsx          renders the selected shape
+│   │   └── shapes/                registry.ts + the eight shapes + shapes.css
+│   ├── components/
+│   │   ├── Panel.tsx              shared panel frame
+│   │   ├── StatusIndicator.tsx    shared dot + chip
+│   │   ├── statusMeta.ts          one status vocabulary for every panel
+│   │   ├── SystemStatusPanel · AgentsPanel · MemoryPanel ·
+│   │   │   ConnectorsPanel · EventStreamPanel
+│   │   ├── CommandCenter.tsx      input, history, suggestions, result
+│   │   ├── VoiceControl.tsx       mic, visualiser, mute, push-to-talk
+│   │   ├── CoreControlBar.tsx     shape rail + state pills
+│   │   └── ShapeGlyph · StatBar · StateSelector · StatusBadge · DemoDataNotice
+│   ├── styles/                    tokens · global · compact
+│   └── __tests__/                 29 unit tests
+└── eslint.config.js / vitest.config.ts
 ```
 
-Styling is kept out of the components: each component has a sibling `.css`
-file, and the shared vocabulary lives in `styles/`.
+Every panel reads from `useJarvis()`, so there is one status vocabulary, one
+panel frame and one row style — no panel carries a private copy.
 
 ---
 
 ## Adding your own core shape
 
-1. Copy `src/core/shapes/CustomCore.tsx` to e.g. `MyCore.tsx` and draw whatever
-   you want. The component receives `{ state, intensity }` and inherits
-   `--jv-state` (current accent colour) and `--i` (0..1 intensity).
+1. Copy `src/core/shapes/CustomCore.tsx`. The component receives `{ state }` and
+   inherits `--jv-state` (accent colour) and `--jv-i` (0..1 intensity).
 2. Register it in `src/core/shapes/registry.ts`.
-3. Add an entry to `coreShapes` in `src/config/jarvis.config.ts`.
+3. Add an entry to `coreShapes` in `src/config/jarvis.config.ts` and to the
+   `CoreShapeId` union in `src/types/index.ts`.
 
-It then appears in the CORE SHAPE selector automatically. Add the shape id to
-the `CoreShapeId` union in `src/types/index.ts` so TypeScript stays happy.
+It then appears in the shape rail automatically.
 
 ---
 
-## Connecting real data later (phase 2+)
+## Connecting real data later (phase 3)
 
-The seams are already in place — no component will need to change:
+The seams are in place — no component will need to change:
 
-- **Telemetry** — implement `createLiveSource()` in `src/services/telemetry.ts`
-  (fetch, WebSocket or an MCP bridge) so it returns the same `TelemetrySource`
-  shape, then set `telemetry.source = 'live'` in the config. The `DEMO DATA`
-  banner and the `SIMULATED` labels are driven by `snapshot.isMock`, so they
-  switch to `LIVE` on their own.
-- **Commands** — replace the body of `runCommand()` in
-  `src/services/commands.ts` with a call into your OpenClaw / MCP bridge and
-  flip `command.executeForReal` to `true`.
-- **Types** — `AiModuleStatus`, `SystemMetric` and `TelemetrySnapshot` in
-  `src/types/index.ts` are already shaped the way a real status feed delivers
-  data.
+- **Telemetry** — implement `createLiveSource()` in `src/services/telemetry.ts`,
+  then set `telemetry.source = 'live'`. The `MOCK DATA` banner and the
+  `SIMULATED` labels follow `snapshot.isMock` and switch by themselves.
+- **Commands** — replace the marked block inside `runCommand()` in
+  `src/services/commands.ts` with a call into your OpenClaw / MCP bridge, and
+  flip `command.executeForReal`.
+- **Agents / memory / connectors / events** — each has its own service module
+  returning the types in `src/types/index.ts`; swap the mock builder for a real
+  fetch.
+- **Voice** — `src/hooks/useVoice.ts` is the only place that would ever touch a
+  microphone. Real capture goes there and nowhere else.
+
+`src/__tests__/mockMode.test.ts` encodes the phase-2 safety contract: mock mode
+on, no service `ONLINE`, no connector `CONNECTED`, `executeForReal` off. Those
+tests fail loudly if the HUD is ever pointed at something real by accident.
 
 ---
 
 ## Layout notes
 
-Desktop-first, single screen, no tabs, no page scrolling. On shorter displays
-the panels progressively shed padding and secondary text
-(`src/styles/compact.css`) rather than introducing a scrollbar; verified with
-the full activity log at 1600×950, 1440×900 and 1280×800. Below 1100px wide the
-grid stacks into a tablet layout with the core on top.
+Desktop-first, single screen, no tabs, no page scrolling. Below 1000px of
+viewport height the panels progressively shed padding and secondary text
+(`src/styles/compact.css`) rather than introducing a scrollbar. Below 1200px
+wide the grid stacks with the core on top. Verified with a full activity log at
+1600×950, 1440×900, 1280×800, 1200×820 and 900×1200.
 
-Motion honours `prefers-reduced-motion`, and can also be flattened explicitly
-via `animation.reducedMotion` in the config.
+Motion honours `prefers-reduced-motion`, and can be flattened explicitly via
+`animation.reducedMotion` in the config.

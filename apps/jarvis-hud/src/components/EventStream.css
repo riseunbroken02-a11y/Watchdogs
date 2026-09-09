@@ -1,0 +1,76 @@
+.jv-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  overflow-y: auto;
+  font-family: var(--jv-mono);
+  font-size: 10px;
+  line-height: 1.5;
+  padding: 2px 0;
+}
+
+.jv-event {
+  display: grid;
+  grid-template-columns: 58px 14px 96px 1fr;
+  gap: 9px;
+  align-items: baseline;
+  padding: 2px 4px;
+  border-radius: 2px;
+  animation: jv-event-in 300ms var(--jv-ease) both;
+}
+.jv-event:hover { background: rgba(56, 189, 248, 0.05); }
+
+@keyframes jv-event-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.jv-event__time { color: var(--jv-text-faint); font-variant-numeric: tabular-nums; }
+
+.jv-event__glyph {
+  color: var(--jv-tone);
+  font-size: 9px;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.jv-event__source {
+  color: var(--jv-text-dim);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jv-event__msg { color: var(--jv-text); word-break: break-word; }
+
+.jv-event--warning .jv-event__msg { color: var(--jv-warning); }
+.jv-event--error   .jv-event__msg { color: var(--jv-danger); }
+.jv-event--task-complete .jv-event__msg { color: var(--jv-success); }
+.jv-event--command .jv-event__msg { color: var(--jv-state); font-weight: 600; }
+
+/* filter chips in the panel header */
+.jv-stream-filters { display: flex; gap: 4px; }
+
+.jv-stream-filter {
+  padding: 2px 7px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  border-radius: 100px;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-stream-filter:hover {
+  color: var(--jv-state);
+  border-color: color-mix(in srgb, var(--jv-state) 45%, transparent);
+}
+.jv-stream-filter[aria-pressed='true'] {
+  color: var(--jv-state);
+  border-color: var(--jv-state);
+  background: color-mix(in srgb, var(--jv-state) 12%, transparent);
+}
+.jv-stream-filter:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }

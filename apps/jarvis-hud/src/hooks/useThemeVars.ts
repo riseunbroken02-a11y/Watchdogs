@@ -36,6 +36,7 @@ export function useThemeVars(state: CoreState) {
       '--jv-pulse': `${animation.pulseSeconds}s`,
       '--jv-rotate': `${animation.rotationSeconds}s`,
       '--jv-transition': `${animation.transitionMs}ms`,
+      '--jv-i': '0.32',
     };
     Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
     root.dataset.reducedMotion = String(animation.reducedMotion);

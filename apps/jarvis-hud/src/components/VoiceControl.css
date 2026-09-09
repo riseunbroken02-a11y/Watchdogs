@@ -1,0 +1,182 @@
+/* ==========================================================================
+   VOICE UI — mock only.
+   No microphone is requested and nothing is recorded; the visualiser is
+   generated locally so the interface can be reviewed before real audio.
+   ========================================================================== */
+
+.jv-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 0 10px;
+  min-height: 48px;
+  background: rgba(4, 12, 22, 0.65);
+  border: 1px solid var(--jv-panel-border);
+  border-radius: var(--jv-radius);
+  transition: border-color var(--jv-transition) var(--jv-ease),
+    box-shadow var(--jv-transition) var(--jv-ease);
+}
+
+.jv-voice--live {
+  border-color: color-mix(in srgb, var(--jv-state) 55%, transparent);
+  box-shadow: 0 0 26px -12px var(--jv-state);
+}
+
+/* ---- microphone button ------------------------------------------------ */
+
+.jv-mic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  color: var(--jv-text-dim);
+  background: color-mix(in srgb, var(--jv-state) 6%, transparent);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-mic:hover {
+  color: var(--jv-state);
+  border-color: color-mix(in srgb, var(--jv-state) 55%, transparent);
+}
+.jv-mic:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+.jv-mic--on {
+  color: var(--jv-state);
+  border-color: var(--jv-state);
+  background: color-mix(in srgb, var(--jv-state) 16%, transparent);
+  box-shadow: 0 0 20px -6px var(--jv-state);
+}
+
+/* listening indicator: a ring that breathes out of the button */
+.jv-mic--on::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--jv-state);
+  opacity: 0.55;
+  animation: jv-mic-ping 1.9s var(--jv-ease) infinite;
+}
+.jv-mic--muted { color: var(--jv-danger); border-color: var(--jv-danger); box-shadow: none; }
+.jv-mic--muted::after { animation: none; opacity: 0.3; border-color: var(--jv-danger); }
+
+@keyframes jv-mic-ping {
+  0%   { transform: scale(0.85); opacity: 0.6; }
+  70%  { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+/* ---- mute toggle ------------------------------------------------------ */
+
+.jv-voice__mute {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--jv-radius);
+  background: none;
+  border: 1px solid transparent;
+  color: var(--jv-text-faint);
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-voice__mute:hover:not(:disabled) { color: var(--jv-state); border-color: rgba(56, 189, 248, 0.25); }
+.jv-voice__mute:disabled { opacity: 0.3; cursor: not-allowed; }
+.jv-voice__mute[aria-pressed='true'] { color: var(--jv-danger); border-color: color-mix(in srgb, var(--jv-danger) 45%, transparent); }
+.jv-voice__mute:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 1px; }
+
+/* ---- visualiser ------------------------------------------------------- */
+
+.jv-viz {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  flex: 1;
+  min-width: 70px;
+}
+
+.jv-viz__bar {
+  flex: 1;
+  min-width: 2px;
+  border-radius: 1px;
+  background: var(--jv-state);
+  transition: height 90ms linear, opacity var(--jv-transition) var(--jv-ease);
+}
+
+.jv-viz--idle .jv-viz__bar { background: var(--jv-text-faint); opacity: 0.4; }
+.jv-viz--muted .jv-viz__bar { background: var(--jv-danger); opacity: 0.5; }
+
+/* ---- status text ------------------------------------------------------ */
+
+.jv-voice__status {
+  display: grid;
+  gap: 1px;
+  min-width: 108px;
+  max-width: 190px;
+}
+
+.jv-voice__label {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  font-weight: 800;
+  color: var(--jv-text-faint);
+  transition: color var(--jv-transition) var(--jv-ease);
+}
+.jv-voice--live .jv-voice__label { color: var(--jv-state); }
+.jv-voice--muted-state .jv-voice__label { color: var(--jv-danger); }
+
+.jv-voice__transcript {
+  font-family: var(--jv-mono);
+  font-size: 9.5px;
+  color: var(--jv-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 13px;
+}
+
+.jv-voice__hint {
+  font-family: var(--jv-mono);
+  font-size: 8.5px;
+  color: var(--jv-text-faint);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.jv-voice__ptt {
+  padding: 5px 10px;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  border-radius: 100px;
+  white-space: nowrap;
+  flex: none;
+  transition: all var(--jv-transition) var(--jv-ease);
+  user-select: none;
+}
+.jv-voice__ptt:hover { color: var(--jv-state); border-color: color-mix(in srgb, var(--jv-state) 45%, transparent); }
+.jv-voice__ptt--held {
+  color: var(--jv-bg);
+  background: var(--jv-state);
+  border-color: var(--jv-state);
+  box-shadow: 0 0 24px -6px var(--jv-state);
+}
+.jv-voice__ptt:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+.jv-voice__mock {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  color: var(--jv-warning);
+  border: 1px dashed rgba(251, 191, 36, 0.45);
+  border-radius: 2px;
+  padding: 2px 5px;
+  flex: none;
+}

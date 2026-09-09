@@ -2,7 +2,7 @@
    CORE SHAPES
    Every shape renders inside a square .jv-shape stage and reads two inputs:
      --jv-state : accent colour of the current core state
-     --i        : 0..1 activity intensity
+     --jv-i     : 0..1 activity intensity (inherited, animated by the browser)
      --tempo    : animation speed multiplier (lower = faster)
    ========================================================================== */
 
@@ -13,7 +13,6 @@
   display: grid;
   place-items: center;
   --tempo: 1;
-  --i: 0.4;
 }
 
 .jv-shape svg {
@@ -38,8 +37,8 @@
   50%      { transform: scale(1.045); opacity: 1; }
 }
 @keyframes jv-flicker {
-  0%, 100% { opacity: calc(0.35 + var(--i) * 0.5); }
-  50%      { opacity: calc(0.7 + var(--i) * 0.3); }
+  0%, 100% { opacity: calc(0.35 + var(--jv-i) * 0.5); }
+  50%      { opacity: calc(0.7 + var(--jv-i) * 0.3); }
 }
 @keyframes jv-dash {
   to { stroke-dashoffset: -1000; }
@@ -69,8 +68,8 @@
   box-shadow:
     inset 0 0 60px color-mix(in srgb, var(--jv-state) 45%, transparent),
     inset -18px -22px 70px rgba(0, 0, 0, 0.85),
-    0 0 calc(50px + var(--i) * 90px) color-mix(in srgb, var(--jv-state) 40%, transparent),
-    0 0 calc(120px + var(--i) * 160px) color-mix(in srgb, var(--jv-state) 18%, transparent);
+    0 0 calc(50px + var(--jv-i) * 90px) color-mix(in srgb, var(--jv-state) 40%, transparent),
+    0 0 calc(120px + var(--jv-i) * 160px) color-mix(in srgb, var(--jv-state) 18%, transparent);
 }
 
 .jv-orb__sheen {
@@ -126,7 +125,7 @@
   fill: color-mix(in srgb, var(--jv-state) 20%, transparent);
   stroke: var(--jv-state);
   stroke-width: 1.2;
-  filter: drop-shadow(0 0 calc(8px + var(--i) * 22px) var(--jv-state));
+  filter: drop-shadow(0 0 calc(8px + var(--jv-i) * 22px) var(--jv-state));
   animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
   transform-origin: 50% 50%;
 }
@@ -142,7 +141,7 @@
   stroke: var(--jv-state);
   stroke-width: 1.4;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 calc(4px + var(--i) * 14px) color-mix(in srgb, var(--jv-state) 70%, transparent));
+  filter: drop-shadow(0 0 calc(4px + var(--jv-i) * 14px) color-mix(in srgb, var(--jv-state) 70%, transparent));
 }
 .jv-hex__outline--faint { stroke-opacity: 0.28; stroke-width: 1; filter: none; }
 .jv-hex__fill {
@@ -183,7 +182,7 @@
   border: 1px solid color-mix(in srgb, var(--jv-state) 40%, transparent);
   box-shadow:
     inset 0 0 50px color-mix(in srgb, var(--jv-state) 22%, transparent),
-    0 0 calc(30px + var(--i) * 70px) color-mix(in srgb, var(--jv-state) 25%, transparent);
+    0 0 calc(30px + var(--jv-i) * 70px) color-mix(in srgb, var(--jv-state) 25%, transparent);
   backdrop-filter: blur(2px);
   animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
 }
@@ -197,7 +196,7 @@
     color-mix(in srgb, var(--jv-state) 22%, transparent) 0 1px,
     transparent 1px 5px
   );
-  opacity: calc(0.35 + var(--i) * 0.45);
+  opacity: calc(0.35 + var(--jv-i) * 0.45);
   mix-blend-mode: screen;
 }
 .jv-holo__sweep {
@@ -260,7 +259,7 @@
 }
 .jv-reactor__core {
   fill: color-mix(in srgb, var(--jv-state) 65%, #fff);
-  filter: drop-shadow(0 0 calc(14px + var(--i) * 40px) var(--jv-state));
+  filter: drop-shadow(0 0 calc(14px + var(--jv-i) * 40px) var(--jv-state));
   transform-origin: 50% 50%;
   animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * 0.8) ease-in-out infinite;
 }
@@ -286,7 +285,7 @@
   stroke: var(--jv-state);
   stroke-width: 2;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 calc(4px + var(--i) * 16px) color-mix(in srgb, var(--jv-state) 80%, transparent));
+  filter: drop-shadow(0 0 calc(4px + var(--jv-i) * 16px) color-mix(in srgb, var(--jv-state) 80%, transparent));
 }
 .jv-wave__path--ghost { stroke-opacity: 0.3; stroke-width: 1.2; filter: none; }
 .jv-wave__bar {
@@ -303,7 +302,7 @@
   border: 1px solid color-mix(in srgb, var(--jv-state) 70%, transparent);
   background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 22%, transparent), transparent 70%);
   box-shadow:
-    0 0 calc(24px + var(--i) * 60px) color-mix(in srgb, var(--jv-state) 45%, transparent),
+    0 0 calc(24px + var(--jv-i) * 60px) color-mix(in srgb, var(--jv-state) 45%, transparent),
     inset 0 0 30px color-mix(in srgb, var(--jv-state) 25%, transparent);
   animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
 }

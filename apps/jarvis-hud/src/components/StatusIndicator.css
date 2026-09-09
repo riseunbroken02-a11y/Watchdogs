@@ -1,0 +1,54 @@
+/* Shared status vocabulary: one dot + one chip, reused by the services,
+   agents and connectors panels so those never grow their own variants. */
+
+.jv-dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--jv-tone);
+  box-shadow: 0 0 10px var(--jv-tone);
+  flex: none;
+}
+
+/* Only "live" statuses ping; offline/disconnected sit still. */
+.jv-dot--pulse::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--jv-tone);
+  opacity: 0.5;
+  animation: jv-ping 2.4s var(--jv-ease) infinite;
+}
+
+.jv-dot--hollow {
+  background: transparent;
+  border: 1px solid var(--jv-tone);
+  box-shadow: none;
+}
+
+@keyframes jv-ping {
+  0%   { transform: scale(0.7); opacity: 0.7; }
+  70%  { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.jv-chip {
+  display: inline-block;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  color: var(--jv-tone);
+  border: 1px solid color-mix(in srgb, var(--jv-tone) 40%, transparent);
+  background: color-mix(in srgb, var(--jv-tone) 10%, transparent);
+  border-radius: 2px;
+  padding: 2px 5px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* MOCK is deliberately loud: it must never be mistaken for a real reading. */
+.jv-chip--mock {
+  border-style: dashed;
+}
