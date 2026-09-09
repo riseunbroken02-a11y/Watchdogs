@@ -1,0 +1,141 @@
+/* ==========================================================================
+   HUD LAYOUT — desktop-first, single screen, no scrolling page.
+   ========================================================================== */
+
+.jv-app {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  height: 100dvh;
+  padding: 14px 18px 16px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 14px;
+  overflow: hidden;
+}
+
+/* ---- header ------------------------------------------------------------ */
+
+.jv-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--jv-panel-border);
+}
+
+.jv-header__brand { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+
+.jv-header__name {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.42em;
+  color: var(--jv-text);
+  text-shadow: 0 0 26px color-mix(in srgb, var(--jv-state) 55%, transparent);
+  transition: text-shadow var(--jv-transition) var(--jv-ease);
+}
+
+.jv-header__subtitle {
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: var(--jv-text-faint);
+  white-space: nowrap;
+}
+
+.jv-header__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  font-family: var(--jv-mono);
+  font-size: 10px;
+  color: var(--jv-text-dim);
+}
+
+.jv-header__clock {
+  font-size: 15px;
+  color: var(--jv-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.jv-header__meta { display: grid; gap: 2px; justify-items: end; }
+.jv-header__build { font-size: 9px; letter-spacing: 0.18em; color: var(--jv-text-faint); }
+
+/* ---- main grid --------------------------------------------------------- */
+
+.jv-main {
+  display: grid;
+  grid-template-columns: 246px 1fr 268px;
+  gap: 14px;
+  min-height: 0;
+}
+
+.jv-col {
+  display: grid;
+  grid-auto-rows: max-content;
+  gap: 12px;
+  align-content: start;
+  min-height: 0;
+  /* Panels keep their natural height; the column itself scrolls on short
+     screens so the dashboard never grows into a long page. */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.jv-center {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* ---- footer / command -------------------------------------------------- */
+
+.jv-footer { display: grid; gap: 10px; }
+
+.jv-footer__log {
+  border: 1px solid var(--jv-panel-border);
+  border-radius: var(--jv-radius);
+  background: var(--jv-panel);
+  backdrop-filter: blur(12px);
+  padding: 10px 14px;
+}
+
+.jv-footer__log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+/* ---- responsive: tablet ------------------------------------------------ */
+
+@media (max-width: 1180px) {
+  .jv-main { grid-template-columns: 216px 1fr 236px; }
+  .jv-header__name { font-size: 18px; letter-spacing: 0.32em; }
+}
+
+@media (max-width: 1100px) {
+  .jv-app { height: auto; min-height: 100dvh; overflow-y: auto; }
+  body { overflow: auto; }
+  .jv-main {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'center center'
+      'left right';
+  }
+  .jv-center { grid-area: center; min-height: 56vh; }
+  .jv-col--left { grid-area: left; }
+  .jv-col--right { grid-area: right; }
+}
+
+@media (max-width: 680px) {
+  .jv-app { padding: 12px; }
+  .jv-header { grid-template-columns: 1fr; justify-items: start; gap: 10px; }
+  .jv-header__right { justify-content: flex-start; }
+  .jv-main { grid-template-columns: 1fr; grid-template-areas: 'center' 'left' 'right'; }
+  .jv-command { grid-template-columns: 1fr; }
+}

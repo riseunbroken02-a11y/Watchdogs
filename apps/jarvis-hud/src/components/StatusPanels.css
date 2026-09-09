@@ -1,0 +1,127 @@
+/* ---- module list (AI STATUS) ------------------------------------------- */
+
+.jv-modules { display: grid; gap: 2px; }
+
+.jv-module {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-radius: var(--jv-radius);
+  transition: background var(--jv-transition) var(--jv-ease);
+}
+.jv-module + .jv-module { border-top: 1px solid rgba(56, 189, 248, 0.07); }
+.jv-module:hover { background: color-mix(in srgb, var(--jv-state) 6%, transparent); }
+
+.jv-module__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--jv-tone);
+  box-shadow: 0 0 10px var(--jv-tone);
+  position: relative;
+}
+.jv-module__dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--jv-tone);
+  opacity: 0.5;
+  animation: jv-ping 2.4s var(--jv-ease) infinite;
+}
+@keyframes jv-ping {
+  0%   { transform: scale(0.7); opacity: 0.7; }
+  70%  { transform: scale(1.7); opacity: 0; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.jv-module__text { display: grid; gap: 2px; min-width: 0; }
+.jv-module__label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: var(--jv-text);
+}
+.jv-module__detail {
+  font-size: 9px;
+  color: var(--jv-text-faint);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jv-module__meta { display: grid; justify-items: end; gap: 2px; }
+.jv-module__health {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: var(--jv-tone);
+}
+.jv-module__latency {
+  font-family: var(--jv-mono);
+  font-size: 9px;
+  color: var(--jv-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- online badge ------------------------------------------------------ */
+
+.jv-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid color-mix(in srgb, var(--jv-state) 35%, transparent);
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--jv-state) 8%, transparent);
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-online__pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--jv-state);
+  box-shadow: 0 0 12px var(--jv-state);
+  animation: jv-pip calc(var(--jv-pulse) * 0.6) ease-in-out infinite;
+}
+@keyframes jv-pip {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.82); }
+}
+.jv-online__text {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  font-weight: 700;
+  color: var(--jv-state);
+}
+
+/* ---- demo data banner -------------------------------------------------- */
+
+.jv-demo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 1px dashed rgba(251, 191, 36, 0.4);
+  border-radius: var(--jv-radius);
+  background: rgba(251, 191, 36, 0.06);
+}
+.jv-demo__tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--jv-warning);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  border-radius: 2px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.jv-demo__text {
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgba(251, 191, 36, 0.82);
+  letter-spacing: 0.03em;
+}

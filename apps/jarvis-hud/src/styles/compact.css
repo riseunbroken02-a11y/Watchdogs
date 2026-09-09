@@ -1,0 +1,53 @@
+/* ==========================================================================
+   HEIGHT-ADAPTIVE COMPACTION
+   The HUD must fit on one screen. On shorter displays the panels progressively
+   shed padding and secondary text instead of introducing a scrollbar.
+   Kept in one file so component stylesheets stay readable.
+   ========================================================================== */
+
+/* ---- tier 0: large displays (≤ 1000px) — padding only, nothing hidden -- */
+@media (max-height: 1000px) {
+  .jv-panel__body { padding: 10px 13px; }
+  .jv-stat { padding: 4px 0; }
+  .jv-module { padding: 5px 4px; }
+}
+
+/* ---- tier A: laptop heights (≤ 900px) --------------------------------- */
+@media (max-height: 900px) {
+  .jv-app { padding: 10px 14px 12px; gap: 10px; }
+  .jv-main { gap: 10px; }
+  .jv-col { gap: 9px; }
+  .jv-header { padding-bottom: 9px; }
+  .jv-header__name { font-size: 19px; }
+
+  .jv-panel__head { padding: 7px 12px; }
+  .jv-panel__body { padding: 8px 12px; }
+
+  /* the shape descriptions are the cheapest thing to drop */
+  .jv-shape-btn__desc { display: none; }
+  .jv-shape-btn { padding: 7px 10px; }
+  .jv-shapes { gap: 5px; }
+
+  .jv-stat { padding: 4px 0; }
+  .jv-module { padding: 5px 4px; }
+
+  .jv-demo { padding: 6px 10px; }
+  .jv-demo__text { font-size: 9px; }
+
+  .jv-log { height: 76px; }
+  .jv-footer { gap: 8px; }
+  .jv-footer__log { padding: 8px 12px; }
+  .jv-command__field,
+  .jv-command__submit { min-height: 42px; }
+}
+
+/* ---- tier B: short desktops (≤ 820px) --------------------------------- */
+@media (max-height: 820px) {
+  .jv-module__detail { display: none; }
+  .jv-module { padding: 4px 4px; }
+  .jv-shape-btn { padding: 5px 10px; }
+  .jv-state-btn { padding: 5px 9px; }
+  .jv-stat__readout { display: none; }
+  .jv-log { height: 64px; }
+  .jv-stage__shape-name { top: -30px; }
+}

@@ -1,0 +1,36 @@
+.jv-states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.jv-state-btn {
+  position: relative;
+  padding: 6px 10px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  border-radius: 100px;
+  transition: all var(--jv-transition) var(--jv-ease);
+  white-space: nowrap;
+}
+
+.jv-state-btn:hover:not(:disabled) {
+  color: var(--jv-tone);
+  border-color: color-mix(in srgb, var(--jv-tone) 55%, transparent);
+  box-shadow: 0 0 18px -6px var(--jv-tone);
+}
+
+.jv-state-btn[aria-pressed='true'] {
+  color: var(--jv-tone);
+  border-color: var(--jv-tone);
+  background: color-mix(in srgb, var(--jv-tone) 14%, transparent);
+  box-shadow: 0 0 20px -6px var(--jv-tone);
+}
+
+.jv-state-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.jv-state-btn:focus-visible { outline: 1px solid var(--jv-tone); outline-offset: 2px; }

@@ -1,0 +1,39 @@
+/* Design tokens. Runtime values are injected from src/config/jarvis.config.ts
+   by <ThemeProvider>; the values here are static fallbacks. */
+:root {
+  --jv-bg: #04070d;
+  --jv-bg-elevated: #080d18;
+  --jv-panel: rgba(10, 20, 34, 0.55);
+  --jv-panel-border: rgba(56, 189, 248, 0.16);
+  --jv-grid: rgba(56, 189, 248, 0.05);
+
+  --jv-accent: #22d3ee;
+  --jv-accent-soft: #0e7490;
+  --jv-accent-bright: #67e8f9;
+
+  --jv-text: #d7ecf5;
+  --jv-text-dim: #5f7d90;
+  --jv-text-faint: #33505f;
+
+  --jv-success: #34d399;
+  --jv-warning: #fbbf24;
+  --jv-danger: #f87171;
+  --jv-violet: #a78bfa;
+
+  /* Live state accent — swapped whenever the core state changes. */
+  --jv-state: var(--jv-accent);
+  --jv-state-glow: rgba(34, 211, 238, 0.35);
+
+  --jv-pulse: 3.2s;
+  --jv-rotate: 18s;
+  --jv-transition: 260ms;
+  --jv-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --jv-radius: 4px;
+  --jv-radius-lg: 10px;
+
+  --jv-font: 'Rajdhani', 'Eurostile', 'Bahnschrift', 'DIN Alternate',
+    'Segoe UI', system-ui, sans-serif;
+  --jv-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', 'Roboto Mono',
+    ui-monospace, monospace;
+}

@@ -1,0 +1,344 @@
+/* ==========================================================================
+   CORE SHAPES
+   Every shape renders inside a square .jv-shape stage and reads two inputs:
+     --jv-state : accent colour of the current core state
+     --i        : 0..1 activity intensity
+     --tempo    : animation speed multiplier (lower = faster)
+   ========================================================================== */
+
+.jv-shape {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  --tempo: 1;
+  --i: 0.4;
+}
+
+.jv-shape svg {
+  overflow: visible;
+}
+
+.jv-shape__svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- shared keyframes -------------------------------------------------- */
+
+@keyframes jv-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes jv-spin-rev {
+  to { transform: rotate(-360deg); }
+}
+@keyframes jv-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50%      { transform: scale(1.045); opacity: 1; }
+}
+@keyframes jv-flicker {
+  0%, 100% { opacity: calc(0.35 + var(--i) * 0.5); }
+  50%      { opacity: calc(0.7 + var(--i) * 0.3); }
+}
+@keyframes jv-dash {
+  to { stroke-dashoffset: -1000; }
+}
+@keyframes jv-rise {
+  0%   { transform: translateY(14%) scale(0.6); opacity: 0; }
+  20%  { opacity: 0.9; }
+  100% { transform: translateY(-70%) scale(1); opacity: 0; }
+}
+@keyframes jv-scan {
+  0%   { transform: translateY(-110%); }
+  100% { transform: translateY(310%); }
+}
+
+/* ==========================================================  ORB  ========= */
+
+.jv-orb {
+  position: relative;
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.55), transparent 34%),
+    radial-gradient(circle at 42% 38%, color-mix(in srgb, var(--jv-state) 85%, #fff), transparent 58%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 55%, #000) 30%, #030913 78%);
+  box-shadow:
+    inset 0 0 60px color-mix(in srgb, var(--jv-state) 45%, transparent),
+    inset -18px -22px 70px rgba(0, 0, 0, 0.85),
+    0 0 calc(50px + var(--i) * 90px) color-mix(in srgb, var(--jv-state) 40%, transparent),
+    0 0 calc(120px + var(--i) * 160px) color-mix(in srgb, var(--jv-state) 18%, transparent);
+}
+
+.jv-orb__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 115%, color-mix(in srgb, var(--jv-state) 40%, transparent), transparent 55%);
+  mix-blend-mode: screen;
+}
+
+.jv-orb__halo {
+  position: absolute;
+  inset: -9%;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--jv-state) 30%, transparent);
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * 1.4) ease-in-out infinite;
+}
+.jv-orb__halo--2 { inset: -18%; opacity: 0.5; animation-delay: -0.6s; }
+
+.jv-orb__equator {
+  position: absolute;
+  inset: 12% -4%;
+  border-radius: 50%;
+  border-top: 1px solid color-mix(in srgb, var(--jv-state) 45%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--jv-state) 20%, transparent);
+  transform: rotateX(74deg);
+  animation: jv-spin calc(var(--jv-rotate) * var(--tempo)) linear infinite;
+}
+
+/* =========================================================  RING  ========= */
+
+.jv-ring__group { transform-origin: 50% 50%; }
+.jv-ring__group--a { animation: jv-spin calc(var(--jv-rotate) * var(--tempo)) linear infinite; }
+.jv-ring__group--b { animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * 1.6) linear infinite; }
+.jv-ring__group--c { animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * 2.4) linear infinite; }
+
+.jv-ring__track {
+  fill: none;
+  stroke: color-mix(in srgb, var(--jv-state) 22%, transparent);
+  stroke-width: 1;
+}
+.jv-ring__arc {
+  fill: none;
+  stroke: var(--jv-state);
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--jv-state) 70%, transparent));
+}
+.jv-ring__tick {
+  stroke: color-mix(in srgb, var(--jv-state) 45%, transparent);
+  stroke-width: 1;
+}
+.jv-ring__core {
+  fill: color-mix(in srgb, var(--jv-state) 20%, transparent);
+  stroke: var(--jv-state);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 calc(8px + var(--i) * 22px) var(--jv-state));
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
+
+/* ======================================================  HEXAGON  ========= */
+
+.jv-hex__group { transform-origin: 50% 50%; }
+.jv-hex__group--slow { animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * 3) linear infinite; }
+.jv-hex__group--rev { animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * 2) linear infinite; }
+
+.jv-hex__outline {
+  fill: none;
+  stroke: var(--jv-state);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 calc(4px + var(--i) * 14px) color-mix(in srgb, var(--jv-state) 70%, transparent));
+}
+.jv-hex__outline--faint { stroke-opacity: 0.28; stroke-width: 1; filter: none; }
+.jv-hex__fill {
+  fill: color-mix(in srgb, var(--jv-state) 12%, transparent);
+  stroke: none;
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+}
+.jv-hex__line {
+  stroke: color-mix(in srgb, var(--jv-state) 55%, transparent);
+  stroke-width: 0.8;
+  stroke-dasharray: 4 6;
+  animation: jv-dash calc(var(--jv-rotate) * var(--tempo) * 1.2) linear infinite;
+}
+.jv-hex__node {
+  fill: var(--jv-state);
+  filter: drop-shadow(0 0 6px var(--jv-state));
+}
+
+/* =====================================================  HOLOGRAM  ======== */
+
+.jv-holo {
+  position: relative;
+  width: 66%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+.jv-holo__body {
+  position: absolute;
+  inset: 12%;
+  border-radius: 46% 46% 42% 42% / 48%;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--jv-state) 26%, transparent),
+    color-mix(in srgb, var(--jv-state) 8%, transparent) 55%,
+    transparent
+  );
+  border: 1px solid color-mix(in srgb, var(--jv-state) 40%, transparent);
+  box-shadow:
+    inset 0 0 50px color-mix(in srgb, var(--jv-state) 22%, transparent),
+    0 0 calc(30px + var(--i) * 70px) color-mix(in srgb, var(--jv-state) 25%, transparent);
+  backdrop-filter: blur(2px);
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+}
+.jv-holo__scanlines {
+  position: absolute;
+  inset: 12%;
+  border-radius: 46% 46% 42% 42% / 48%;
+  overflow: hidden;
+  background: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--jv-state) 22%, transparent) 0 1px,
+    transparent 1px 5px
+  );
+  opacity: calc(0.35 + var(--i) * 0.45);
+  mix-blend-mode: screen;
+}
+.jv-holo__sweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--jv-state) 45%, transparent),
+    transparent
+  );
+  animation: jv-scan calc(3.4s * var(--tempo)) linear infinite;
+}
+.jv-holo__base {
+  position: absolute;
+  bottom: 6%;
+  width: 74%;
+  height: 8%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--jv-state) 60%, transparent), transparent 70%);
+  filter: blur(2px);
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+}
+.jv-holo__particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--jv-state);
+  box-shadow: 0 0 8px var(--jv-state);
+  bottom: 10%;
+  animation: jv-rise var(--dur) linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* ======================================================  REACTOR  ======== */
+
+.jv-reactor__spin { transform-origin: 50% 50%; animation: jv-spin calc(var(--jv-rotate) * var(--tempo)) linear infinite; }
+.jv-reactor__spin-rev { transform-origin: 50% 50%; animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * 1.8) linear infinite; }
+
+.jv-reactor__housing {
+  fill: none;
+  stroke: color-mix(in srgb, var(--jv-state) 30%, transparent);
+  stroke-width: 6;
+}
+.jv-reactor__segment {
+  fill: none;
+  stroke: var(--jv-state);
+  stroke-width: 5;
+  stroke-linecap: butt;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--jv-state) 70%, transparent));
+}
+.jv-reactor__coil {
+  fill: color-mix(in srgb, var(--jv-state) 10%, transparent);
+  stroke: color-mix(in srgb, var(--jv-state) 65%, transparent);
+  stroke-width: 1.2;
+}
+.jv-reactor__core {
+  fill: color-mix(in srgb, var(--jv-state) 65%, #fff);
+  filter: drop-shadow(0 0 calc(14px + var(--i) * 40px) var(--jv-state));
+  transform-origin: 50% 50%;
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * 0.8) ease-in-out infinite;
+}
+.jv-reactor__inner-ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--jv-state) 80%, transparent);
+  stroke-width: 1.4;
+}
+.jv-reactor__glow {
+  fill: color-mix(in srgb, var(--jv-state) 18%, transparent);
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+}
+
+/* =========================================================  WAVE  ======== */
+
+.jv-wave__ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--jv-state) 25%, transparent);
+  stroke-width: 1;
+}
+.jv-wave__path {
+  fill: none;
+  stroke: var(--jv-state);
+  stroke-width: 2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 calc(4px + var(--i) * 16px) color-mix(in srgb, var(--jv-state) 80%, transparent));
+}
+.jv-wave__path--ghost { stroke-opacity: 0.3; stroke-width: 1.2; filter: none; }
+.jv-wave__bar {
+  fill: var(--jv-state);
+  opacity: 0.75;
+}
+
+/* ======================================================  MINIMAL  ======== */
+
+.jv-minimal {
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--jv-state) 70%, transparent);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 22%, transparent), transparent 70%);
+  box-shadow:
+    0 0 calc(24px + var(--i) * 60px) color-mix(in srgb, var(--jv-state) 45%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--jv-state) 25%, transparent);
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+}
+
+/* =======================================================  CUSTOM  ======== */
+
+.jv-custom {
+  width: 58%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  border-radius: var(--jv-radius-lg);
+  border: 1px dashed color-mix(in srgb, var(--jv-state) 45%, transparent);
+  background: color-mix(in srgb, var(--jv-state) 5%, transparent);
+  text-align: center;
+  padding: 24px;
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * 1.6) ease-in-out infinite;
+}
+.jv-custom__title {
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  color: var(--jv-state);
+  font-weight: 600;
+}
+.jv-custom__body {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--jv-text-dim);
+  max-width: 30ch;
+}
+.jv-custom__code {
+  font-family: var(--jv-mono);
+  font-size: 10px;
+  color: var(--jv-state);
+  opacity: 0.8;
+  word-break: break-all;
+}
