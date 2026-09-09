@@ -1,4 +1,4 @@
-# JARVIS HUD — Phase 2
+# JARVIS HUD — Phase 3
 
 A fully local, interactive command center for the AIVM-BRAIN / OpenClaw system.
 
@@ -8,6 +8,10 @@ A fully local, interactive command center for the AIVM-BRAIN / OpenClaw system.
 > **never requests the microphone**. Nothing in your AIVM-BRAIN, OpenClaw,
 > Claude Code, Claude-Mem, OmniRoute or MCP configuration is read or changed.
 > The whole app lives in `apps/jarvis-hud/`.
+>
+> Phase 3 puts a real integration layer behind that: contracts, a
+> framework-free kernel and swappable adapters. See **[ARCHITECTURE.md](ARCHITECTURE.md)**
+> for how agents, memory and connectors plug in later.
 
 ---
 
@@ -181,80 +185,23 @@ everywhere without touching a stylesheet.
 ## Project structure
 
 ```
-apps/jarvis-hud/
-├── src/
-│   ├── App.tsx / App.css          dashboard layout
-│   ├── config/
-│   │   ├── jarvis.config.ts       look + behaviour
-│   │   └── mock.config.ts         all mock data
-│   ├── types/index.ts             shared types (backend-shaped)
-│   ├── state/
-│   │   ├── JarvisProvider.tsx     provider component
-│   │   └── jarvisContext.ts       context + useJarvis()
-│   ├── hooks/
-│   │   ├── useJarvisSystem.ts     composes every subsystem
-│   │   ├── useCoreState.ts        state machine + --jv-i
-│   │   ├── useTelemetry.ts        telemetry subscription
-│   │   ├── useCommandHistory.ts   ↑/↓ recall
-│   │   ├── useVoice.ts            mock voice (no microphone)
-│   │   ├── useThemeVars.ts        config → CSS custom properties
-│   │   └── useClock.ts
-│   ├── services/                  telemetry · commands · agents · events ·
-│   │                              memory · connectors · voice  (all mock)
-│   ├── core/
-│   │   ├── CoreStage.tsx          renders the selected shape
-│   │   └── shapes/                registry.ts + the eight shapes + shapes.css
-│   ├── components/
-│   │   ├── Panel.tsx              shared panel frame
-│   │   ├── StatusIndicator.tsx    shared dot + chip
-│   │   ├── statusMeta.ts          one status vocabulary for every panel
-│   │   ├── SystemStatusPanel · AgentsPanel · MemoryPanel ·
-│   │   │   ConnectorsPanel · EventStreamPanel
-│   │   ├── CommandCenter.tsx      input, history, suggestions, result
-│   │   ├── VoiceControl.tsx       mic, visualiser, mute, push-to-talk
-│   │   ├── CoreControlBar.tsx     shape rail + state pills
-│   │   └── ShapeGlyph · StatBar · StateSelector · StatusBadge · DemoDataNotice
-│   ├── styles/                    tokens · global · compact
-│   └── __tests__/                 29 unit tests
-└── eslint.config.js / vitest.config.ts
+apps/jarvis-hud/src/
+├── contracts/     TypeScript interfaces — the only cross-layer vocabulary
+├── kernel/        event bus · core state machine · registries · router · runtime
+├── adapters/mock/ the mock implementations (the only place fake data lives)
+├── state/         React binding: provider + useJarvis()
+├── components/    panels and widgets
+├── core/          the visual core and its eight shapes
+├── config/        jarvis.config.ts (look & behaviour) · mock.config.ts (content)
+├── utils/         small shared helpers
+└── __tests__/     8 suites, 77 tests
 ```
 
-Every panel reads from `useJarvis()`, so there is one status vocabulary, one
-panel frame and one row style — no panel carries a private copy.
+Dependencies point inward only: UI → kernel → contracts, adapters → contracts.
+`src/adapters/mock/index.ts` is the single file that names concrete adapters.
 
----
-
-## Adding your own core shape
-
-1. Copy `src/core/shapes/CustomCore.tsx`. The component receives `{ state }` and
-   inherits `--jv-state` (accent colour) and `--jv-i` (0..1 intensity).
-2. Register it in `src/core/shapes/registry.ts`.
-3. Add an entry to `coreShapes` in `src/config/jarvis.config.ts` and to the
-   `CoreShapeId` union in `src/types/index.ts`.
-
-It then appears in the shape rail automatically.
-
----
-
-## Connecting real data later (phase 3)
-
-The seams are in place — no component will need to change:
-
-- **Telemetry** — implement `createLiveSource()` in `src/services/telemetry.ts`,
-  then set `telemetry.source = 'live'`. The `MOCK DATA` banner and the
-  `SIMULATED` labels follow `snapshot.isMock` and switch by themselves.
-- **Commands** — replace the marked block inside `runCommand()` in
-  `src/services/commands.ts` with a call into your OpenClaw / MCP bridge, and
-  flip `command.executeForReal`.
-- **Agents / memory / connectors / events** — each has its own service module
-  returning the types in `src/types/index.ts`; swap the mock builder for a real
-  fetch.
-- **Voice** — `src/hooks/useVoice.ts` is the only place that would ever touch a
-  microphone. Real capture goes there and nowhere else.
-
-`src/__tests__/mockMode.test.ts` encodes the phase-2 safety contract: mock mode
-on, no service `ONLINE`, no connector `CONNECTED`, `executeForReal` off. Those
-tests fail loudly if the HUD is ever pointed at something real by accident.
+Full detail, including how to plug in AIVM-BRAIN, Claude-Mem, Obsidian,
+OpenClaw and Claude Code: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
 ---
 

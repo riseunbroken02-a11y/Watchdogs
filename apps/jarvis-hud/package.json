@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Phase 2 \u2014 local Jarvis HUD command center for the AIVM-BRAIN / OpenClaw system (mock backend only).",
+  "description": "Phase 2 — local Jarvis HUD command center for the AIVM-BRAIN / OpenClaw system (mock backend only).",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.0",

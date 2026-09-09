@@ -1,11 +1,14 @@
 import { createContext, useContext } from 'react';
-import type { JarvisSystem } from '../hooks/useJarvisSystem';
+import type { JarvisRuntime } from '../kernel/jarvisRuntime';
 
-export const JarvisContext = createContext<JarvisSystem | null>(null);
+/**
+ * The React layer holds a reference to the runtime and nothing else — no
+ * business logic lives on this side of the boundary.
+ */
+export const JarvisRuntimeContext = createContext<JarvisRuntime | null>(null);
 
-/** Reads the shared HUD state. Throws if used outside <JarvisProvider>. */
-export function useJarvis(): JarvisSystem {
-  const value = useContext(JarvisContext);
-  if (!value) throw new Error('useJarvis must be used inside <JarvisProvider>');
-  return value;
+export function useRuntime(): JarvisRuntime {
+  const runtime = useContext(JarvisRuntimeContext);
+  if (!runtime) throw new Error('useRuntime must be used inside <JarvisProvider>');
+  return runtime;
 }

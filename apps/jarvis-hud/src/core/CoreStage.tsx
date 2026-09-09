@@ -1,5 +1,6 @@
 import { animation, coreShapes, stateMeta, stateTempo } from '../config/jarvis.config';
-import type { CoreShapeId, CoreState } from '../types';
+import type { CoreState } from '../contracts';
+import type { CoreShapeId } from '../types';
 import { shapeRegistry } from './shapes/registry';
 import './CoreStage.css';
 

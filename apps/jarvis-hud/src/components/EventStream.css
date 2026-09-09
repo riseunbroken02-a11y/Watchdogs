@@ -10,14 +10,35 @@
   padding: 2px 0;
 }
 
+/* time · event name · source · status · description */
 .jv-event {
   display: grid;
-  grid-template-columns: 58px 14px 96px 1fr;
-  gap: 9px;
+  grid-template-columns: 58px 132px 118px 62px 1fr;
+  gap: 10px;
   align-items: baseline;
   padding: 2px 4px;
   border-radius: 2px;
   animation: jv-event-in 300ms var(--jv-ease) both;
+}
+
+.jv-event__name {
+  color: var(--jv-tone);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jv-event__status {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: var(--jv-tone);
+  border: 1px solid color-mix(in srgb, var(--jv-tone) 35%, transparent);
+  border-radius: 2px;
+  padding: 1px 4px;
+  text-align: center;
+  white-space: nowrap;
 }
 .jv-event:hover { background: rgba(56, 189, 248, 0.05); }
 
@@ -47,14 +68,24 @@
 
 .jv-event--warning .jv-event__msg { color: var(--jv-warning); }
 .jv-event--error   .jv-event__msg { color: var(--jv-danger); }
-.jv-event--task-complete .jv-event__msg { color: var(--jv-success); }
-.jv-event--command .jv-event__msg { color: var(--jv-state); font-weight: 600; }
+.jv-event--ok      .jv-event__msg { color: var(--jv-text); }
+.jv-event--pending .jv-event__msg { color: var(--jv-state); }
+
+/* the operator's own input stands out from the machine chatter */
+.jv-event--input .jv-event__msg { color: var(--jv-state); font-weight: 600; }
+
+@media (max-width: 1200px) {
+  .jv-event { grid-template-columns: 54px 118px 1fr; }
+  .jv-event__status,
+  .jv-event__source { display: none; }
+}
 
 /* filter chips in the panel header */
 .jv-stream-filters { display: flex; gap: 4px; }
 
 .jv-stream-filter {
   padding: 2px 7px;
+  white-space: nowrap;
   font-size: 8.5px;
   letter-spacing: 0.14em;
   font-weight: 700;

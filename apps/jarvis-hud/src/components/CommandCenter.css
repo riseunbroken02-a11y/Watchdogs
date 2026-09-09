@@ -153,8 +153,11 @@
   display: grid;
   gap: 3px;
   align-content: start;
-  height: 74px;
+  /* Fixed so a returning answer never resizes the core and the side panels;
+     tall enough for a reply plus four detail lines. */
+  height: 92px;
   overflow-y: auto;
+  mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
   padding: 8px 12px;
   border: 1px solid var(--jv-panel-border);
   border-left: 2px solid var(--jv-tone);
@@ -223,4 +226,55 @@
   color: var(--jv-text-faint);
   letter-spacing: 0.08em;
   white-space: nowrap;
+}
+
+/* ---- pipeline stepper: input → processing → result --------------------- */
+
+.jv-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.jv-pipeline__step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  color: var(--jv-text-faint);
+  white-space: nowrap;
+  transition: color var(--jv-transition) var(--jv-ease);
+}
+
+.jv-pipeline__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+
+.jv-pipeline__step--done { color: var(--jv-text-dim); }
+.jv-pipeline__step--done .jv-pipeline__dot { background: currentColor; }
+
+.jv-pipeline__step--active { color: var(--jv-state); }
+.jv-pipeline__step--active .jv-pipeline__dot {
+  background: var(--jv-state);
+  box-shadow: 0 0 10px var(--jv-state);
+  animation: jv-pip 1.1s ease-in-out infinite;
+}
+
+.jv-pipeline__arrow {
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+  color: var(--jv-text-faint);
+  opacity: 0.5;
+}
+
+@media (max-width: 900px) {
+  .jv-pipeline { display: none; }
 }

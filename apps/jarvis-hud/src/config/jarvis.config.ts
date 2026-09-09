@@ -10,7 +10,8 @@
  * ============================================================================
  */
 
-import type { CoreShapeId, CoreState } from '../types';
+import type { CoreState } from '../contracts';
+import type { CoreShapeId } from '../types';
 
 /* ---------------------------------------------------------------- identity */
 
@@ -18,7 +19,7 @@ export const identity = {
   name: 'JARVIS',
   subtitle: 'AIVM-BRAIN COMMAND CENTER',
   /** Shown in the header + the demo banner. */
-  build: 'PHASE 2 · MOCK BACKEND',
+  build: 'PHASE 3 · MOCK ADAPTERS',
 } as const;
 
 /* ------------------------------------------------------------------ colours */
@@ -118,9 +119,9 @@ export const defaultShape: CoreShapeId = 'reactor';
 
 export const telemetry = {
   /**
-   * PHASE 1: always 'mock'.
-   * When the real backend exists, add a 'live' source in src/services/telemetry.ts
-   * and switch this value — no component changes required.
+   * PHASE 3: always 'mock'.
+   * `runtime` below selects the whole adapter set; this stays for the telemetry
+   * provider specifically.
    */
   source: 'mock' as 'mock' | 'live',
   /** Poll interval for the telemetry feed, in ms. */
@@ -147,6 +148,19 @@ export const command = {
   showSuggestions: true,
 } as const;
 
+/* ---------------------------------------------------------------- runtime */
+
+export const runtime = {
+  /**
+   * Which adapter set the kernel runs on.
+   *
+   * PHASE 3 SAFETY: 'mock' is the only implemented value. Adding 'live' means
+   * writing `src/adapters/live/index.ts` and building the same runtime from
+   * real adapters — the kernel and every panel stay unchanged.
+   */
+  adapters: 'mock' as 'mock' | 'live',
+} as const;
+
 /* ------------------------------------------------------------------ voice */
 
 export const voice = {
@@ -167,8 +181,12 @@ export const voice = {
 /* ----------------------------------------------------------------- agents */
 
 export const agents = {
-  /** How often the mock agent roster advances, in ms. */
+  /** How often the agent roster advances, in ms. */
   tickIntervalMs: 2400,
+  /** How often an ambient system.info notice is emitted while idle. */
+  ambientIntervalMs: 4200,
+  /** How often every connector is health-checked in the background. */
+  connectorSweepMs: 15000,
 } as const;
 
 /* ----------------------------------------------------------------- panels */
@@ -189,6 +207,7 @@ export const config = {
   stateTempo,
   coreShapes,
   defaultShape,
+  runtime,
   telemetry,
   command,
   voice,

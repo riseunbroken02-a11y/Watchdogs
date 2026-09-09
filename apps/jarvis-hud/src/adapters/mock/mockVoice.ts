@@ -1,13 +1,15 @@
 /**
- * Voice interface — SIMULATION ONLY.
+ * Mock voice adapter.
  *
- * There is deliberately NO getUserMedia, NO MediaRecorder and NO speech-to-text
- * here. The microphone is never requested. `sampleLevels` produces a plausible
- * waveform so the visualiser can be built and reviewed ahead of real audio.
+ * There is deliberately NO getUserMedia, NO MediaRecorder and NO
+ * speech-to-text. The microphone is never requested; the waveform and the
+ * transcript are generated here.
+ *
+ * PHASE 4: real capture goes behind this module and nowhere else.
  */
 
-import { voiceTranscripts } from '../config/mock.config';
-import type { VoiceState } from '../types';
+import { voiceTranscripts } from '../../config/mock.config';
+import type { VoiceState } from '../../types';
 
 export const BAR_COUNT = 24;
 

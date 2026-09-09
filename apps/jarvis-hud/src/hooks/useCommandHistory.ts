@@ -1,35 +1,18 @@
-import { useCallback, useRef, useState } from 'react';
-import type { CommandHistoryEntry, CommandResult } from '../types';
-
-const MAX_HISTORY = 50;
+import { useCallback, useRef } from 'react';
+import type { CommandHistoryEntry } from '../kernel/jarvisRuntime';
 
 /**
- * Command history with shell-style ↑ / ↓ recall.
+ * Shell-style ↑ / ↓ recall over the runtime's command history.
  *
- * The cursor is -1 when the operator is typing a fresh command; stepping back
- * walks into previous entries and stepping forward returns to the draft.
+ * The history itself lives in the kernel; this hook only tracks where the
+ * operator is currently pointing.
  */
-export function useCommandHistory() {
-  const [entries, setEntries] = useState<CommandHistoryEntry[]>([]);
+export function useCommandHistory(entries: CommandHistoryEntry[]) {
   const cursor = useRef(-1);
   const draft = useRef('');
-  const nextId = useRef(0);
-
-  const add = useCallback((input: string): string => {
-    nextId.current += 1;
-    const id = `cmd-${nextId.current}`;
-    setEntries((prev) => [{ id, input, result: null, timestamp: Date.now() }, ...prev].slice(0, MAX_HISTORY));
-    cursor.current = -1;
-    draft.current = '';
-    return id;
-  }, []);
-
-  const complete = useCallback((id: string, result: CommandResult) => {
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, result } : e)));
-  }, []);
 
   /**
-   * Steps through history. `direction` -1 goes further back, +1 comes forward.
+   * `direction` -1 steps further back, +1 comes forward.
    * Returns the value the input should show, or null to leave it alone.
    */
   const recall = useCallback(
@@ -60,5 +43,5 @@ export function useCommandHistory() {
     draft.current = '';
   }, []);
 
-  return { entries, add, complete, recall, reset };
+  return { recall, reset };
 }

@@ -1,23 +1,35 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { memoryCategories } from '../config/mock.config';
-import { relativeTime, searchMemories } from '../services/memory';
-import { useJarvis } from '../state/jarvisContext';
+import type { MemoryRecord } from '../contracts';
+import { relativeTime } from '../utils/time';
+import { useRuntime } from '../state/jarvisContext';
+import { useJarvis } from '../state/useJarvis';
 import { Panel } from './Panel';
 import './Panels.css';
 
 /**
- * MEMORY — recent memories with free-text search and category filters.
- * Backed by the local mock store; no Claude-Mem database is opened.
+ * MEMORY — driven entirely through the `MemoryService` contract.
+ *
+ * The panel calls `search()` and never learns which adapter answered, so an
+ * AIVM-BRAIN, Claude-Mem or Obsidian adapter drops in without a change here.
  */
 export const MemoryPanel = memo(function MemoryPanel() {
-  const { memories } = useJarvis();
+  const runtime = useRuntime();
+  const { memory } = useJarvis();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  const [results, setResults] = useState<MemoryRecord[]>([]);
 
-  const results = useMemo(
-    () => searchMemories(memories, query, category),
-    [memories, query, category],
-  );
+  // search() is async by contract, so the panel treats it as I/O.
+  useEffect(() => {
+    let cancelled = false;
+    void runtime.memory.search({ text: query, category }).then((hits) => {
+      if (!cancelled) setResults(hits);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [runtime, query, category, memory.stats.total]);
 
   const toolbar = (
     <>
@@ -73,7 +85,7 @@ export const MemoryPanel = memo(function MemoryPanel() {
   return (
     <Panel
       title="Memory"
-      aside={`${results.length}/${memories.length} · MOCK`}
+      aside={`${results.length}/${memory.stats.total} · ${memory.stats.adapter.toUpperCase()}`}
       toolbar={toolbar}
       className="jv-panel--memory"
     >

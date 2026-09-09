@@ -7,30 +7,35 @@ import { DemoDataNotice } from './components/DemoDataNotice';
 import { EventStreamPanel } from './components/EventStreamPanel';
 import { MemoryPanel } from './components/MemoryPanel';
 import { StatusBadge } from './components/StatusBadge';
-import { SystemStatusPanel } from './components/SystemStatusPanel';
+import { SystemPanel } from './components/SystemPanel';
 import { defaultShape, identity } from './config/jarvis.config';
 import { CoreStage } from './core/CoreStage';
 import { useClock } from './hooks/useClock';
 import { useThemeVars } from './hooks/useThemeVars';
 import { JarvisProvider } from './state/JarvisProvider';
-import { useJarvis } from './state/jarvisContext';
+import { useRuntime } from './state/jarvisContext';
+import { useJarvis } from './state/useJarvis';
 import type { CoreShapeId } from './types';
 import './App.css';
 
 /**
  * HUD shell.
  *
- * Left  — system status (machine + services) and the agent roster.
- * Centre— the core, its control bar, and the activity stream.
+ * Left  — system status cards and the agent registry.
+ * Centre— the core, its control bar, and the activity log.
  * Right — memory and connectors.
  * Bottom— voice + command center, full width.
+ *
+ * The shell holds one piece of local state (which shape is drawn). Everything
+ * else is read from the kernel through useJarvis().
  */
 function Hud() {
   const [shape, setShape] = useState<CoreShapeId>(defaultShape);
-  const { core, busy } = useJarvis();
+  const runtime = useRuntime();
+  const { coreState, busy } = useJarvis();
   const clock = useClock();
 
-  useThemeVars(core.state);
+  useThemeVars(coreState);
 
   return (
     <div className="jv-app">
@@ -53,17 +58,17 @@ function Hud() {
 
       <main className="jv-main">
         <div className="jv-col jv-col--left">
-          <SystemStatusPanel />
+          <SystemPanel />
           <AgentsPanel />
         </div>
 
         <div className="jv-center">
-          <CoreStage shape={shape} state={core.state} />
+          <CoreStage shape={shape} state={coreState} />
           <CoreControlBar
             shape={shape}
             onShape={setShape}
-            state={core.state}
-            onState={core.requestState}
+            state={coreState}
+            onState={runtime.forceCoreState}
             locked={busy}
           />
           <EventStreamPanel />

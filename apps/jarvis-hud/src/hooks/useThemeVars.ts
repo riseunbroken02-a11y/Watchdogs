@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { animation, palette, stateColors } from '../config/jarvis.config';
-import type { CoreState } from '../types';
+import type { CoreState } from '../contracts';
 
 const toRgba = (hex: string, alpha: number): string => {
   const clean = hex.replace('#', '');

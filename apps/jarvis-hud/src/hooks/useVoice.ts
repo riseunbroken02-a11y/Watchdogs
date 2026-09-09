@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { voice as voiceConfig } from '../config/jarvis.config';
-import { BAR_COUNT, mockTranscript, sampleLevels, silentLevels } from '../services/voice';
+import { BAR_COUNT, mockTranscript, sampleLevels, silentLevels } from '../adapters/mock/mockVoice';
 import type { VoiceSnapshot, VoiceState } from '../types';
 
 const SILENT = silentLevels();

@@ -1,48 +1,39 @@
 import { memo, useMemo, useState } from 'react';
-import { palette } from '../config/jarvis.config';
-import { useJarvis } from '../state/jarvisContext';
-import type { EventKind } from '../types';
+import type { JarvisEventName, JarvisEventRecord } from '../contracts';
+import { clockTime } from '../utils/time';
+import { useJarvis } from '../state/useJarvis';
 import { Panel } from './Panel';
+import { statusTone } from './statusMeta';
 import './EventStream.css';
 
-/** Glyph + tone per event kind. Keeps the stream scannable at a glance. */
-const KIND: Record<EventKind, { glyph: string; tone: string }> = {
-  command: { glyph: '>', tone: palette.accent },
-  'agent-start': { glyph: '▸', tone: palette.accent },
-  'agent-work': { glyph: '◆', tone: palette.warning },
-  memory: { glyph: '◈', tone: palette.violet },
-  'task-complete': { glyph: '✓', tone: palette.success },
-  warning: { glyph: '!', tone: palette.warning },
-  error: { glyph: '✕', tone: palette.danger },
-  info: { glyph: '·', tone: palette.textDim },
-};
+type Filter = 'all' | 'commands' | 'agents' | 'memory' | 'system';
 
-type Filter = 'all' | 'agents' | 'memory' | 'alerts';
-
-const MATCHES: Record<Filter, (kind: EventKind) => boolean> = {
+const MATCHES: Record<Filter, (name: JarvisEventName) => boolean> = {
   all: () => true,
-  agents: (k) => k === 'agent-start' || k === 'agent-work' || k === 'command' || k === 'task-complete',
-  memory: (k) => k === 'memory',
-  alerts: (k) => k === 'warning' || k === 'error',
+  commands: (n) => n.startsWith('command.'),
+  agents: (n) => n.startsWith('agent.'),
+  memory: (n) => n.startsWith('memory.'),
+  system: (n) => n.startsWith('system.') || n.startsWith('connector.'),
 };
 
-const clock = (ts: number) =>
-  new Date(ts).toLocaleTimeString('en-GB', { hour12: false });
+const FILTERS: Filter[] = ['all', 'commands', 'agents', 'memory', 'system'];
 
 /**
- * ACTIVITY / EVENT STREAM — a live-looking feed of everything the mock system
- * does: commands received, agents starting and working, memory accessed, tasks
- * completed, warnings and errors.
+ * ACTIVITY LOG — renders the real records published on the kernel's event bus.
+ *
+ * Each row shows the five things the architecture asks for: time, event name,
+ * source, status and a short description. Nothing here is synthesised for
+ * display; the bus derives source/status/description when an event is emitted.
  */
 export const EventStreamPanel = memo(function EventStreamPanel() {
   const { events } = useJarvis();
   const [filter, setFilter] = useState<Filter>('all');
 
-  const visible = useMemo(() => events.filter((e) => MATCHES[filter](e.kind)), [events, filter]);
+  const visible = useMemo(() => events.filter((e) => MATCHES[filter](e.name)), [events, filter]);
 
   const filters = (
     <div className="jv-stream-filters" role="group" aria-label="Event filter">
-      {(['all', 'agents', 'memory', 'alerts'] as Filter[]).map((f) => (
+      {FILTERS.map((f) => (
         <button
           key={f}
           type="button"
@@ -56,11 +47,13 @@ export const EventStreamPanel = memo(function EventStreamPanel() {
     </div>
   );
 
+  const isOperatorInput = (e: JarvisEventRecord) => e.name === 'command.received';
+
   return (
     <Panel
-      title="Activity Stream"
+      title="Activity Log"
       actions={filters}
-      aside={`${visible.length} · MOCK`}
+      aside={`${visible.length} EVENTS · MOCK`}
       className="jv-panel--stream"
     >
       <div className="jv-stream">
@@ -70,13 +63,14 @@ export const EventStreamPanel = memo(function EventStreamPanel() {
           visible.map((e) => (
             <div
               key={e.id}
-              className={`jv-event jv-event--${e.kind}`}
-              style={{ '--jv-tone': KIND[e.kind].tone } as React.CSSProperties}
+              className={`jv-event jv-event--${e.status} ${isOperatorInput(e) ? 'jv-event--input' : ''}`}
+              style={{ '--jv-tone': statusTone(e.status) } as React.CSSProperties}
             >
-              <span className="jv-event__time">{clock(e.timestamp)}</span>
-              <span className="jv-event__glyph">{KIND[e.kind].glyph}</span>
+              <span className="jv-event__time">{clockTime(e.timestamp)}</span>
+              <span className="jv-event__name">{e.name}</span>
               <span className="jv-event__source">{e.source}</span>
-              <span className="jv-event__msg">{e.message}</span>
+              <span className="jv-event__status">{e.status.toUpperCase()}</span>
+              <span className="jv-event__msg">{e.description}</span>
             </div>
           ))
         )}

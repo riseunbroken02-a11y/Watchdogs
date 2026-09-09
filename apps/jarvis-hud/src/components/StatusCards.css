@@ -1,0 +1,95 @@
+/* ==========================================================================
+   SYSTEM STATUS CARDS
+   Eight cards in two columns: the machine metrics, plus one card each for the
+   agent registry, the memory service and the connector registry — the three
+   subsystems that have their own contract.
+   ========================================================================== */
+
+.jv-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.jv-card {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 7px 9px;
+  min-width: 0;
+  background: rgba(56, 189, 248, 0.035);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: var(--jv-radius);
+  transition: border-color var(--jv-transition) var(--jv-ease),
+    background var(--jv-transition) var(--jv-ease);
+}
+
+.jv-card:hover {
+  border-color: color-mix(in srgb, var(--jv-tone) 42%, transparent);
+  background: color-mix(in srgb, var(--jv-tone) 7%, transparent);
+}
+
+.jv-card__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.jv-card__label {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jv-card__value {
+  font-family: var(--jv-mono);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--jv-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.jv-card__unit {
+  font-size: 9px;
+  color: var(--jv-text-dim);
+  margin-left: 1px;
+}
+
+.jv-card__track {
+  position: relative;
+  height: 3px;
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.jv-card__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--jv-tone);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--jv-tone) 70%, transparent);
+  transition: width 900ms var(--jv-ease), background 400ms var(--jv-ease);
+}
+
+.jv-card__sub {
+  font-family: var(--jv-mono);
+  font-size: 8px;
+  line-height: 1.2;
+  color: var(--jv-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* subsystem cards carry a status dot instead of a meter */
+.jv-card__badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

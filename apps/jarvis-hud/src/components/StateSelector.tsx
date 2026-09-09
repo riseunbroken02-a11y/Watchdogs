@@ -1,5 +1,5 @@
 import { stateColors, stateMeta } from '../config/jarvis.config';
-import type { CoreState } from '../types';
+import type { CoreState } from '../contracts';
 import './StateSelector.css';
 
 const STATES: CoreState[] = ['idle', 'listening', 'thinking', 'working', 'success', 'error'];

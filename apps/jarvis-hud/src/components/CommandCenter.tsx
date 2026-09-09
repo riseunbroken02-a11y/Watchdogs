@@ -1,23 +1,26 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { command as commandConfig } from '../config/jarvis.config';
-import { exampleCommands } from '../services/commands';
+import { command as commandConfig, palette } from '../config/jarvis.config';
+import { useCommandHistory } from '../hooks/useCommandHistory';
 import { useVoice } from '../hooks/useVoice';
-import { useJarvis } from '../state/jarvisContext';
-import { palette } from '../config/jarvis.config';
+import { useRuntime } from '../state/jarvisContext';
+import { useJarvis } from '../state/useJarvis';
+import { CommandPipeline } from './CommandPipeline';
 import { VoiceControl } from './VoiceControl';
 import './CommandCenter.css';
 
 /**
- * COMMAND CENTER — text input (Enter to run), example commands, shell-style
- * ↑/↓ history recall, the last mock result, and the voice UI.
+ * COMMAND CENTER — text in, mock result out, with the three pipeline stages
+ * visible above the input.
  *
- * Phase 2 executes nothing: `runCommand` only drives the visual state machine
- * and the event stream.
+ * The component owns no logic beyond the input itself: it calls
+ * `runtime.dispatch()` and renders whatever the kernel reports.
  */
 export const CommandCenter = memo(function CommandCenter() {
-  const { execute, busy, core, history } = useJarvis();
+  const runtime = useRuntime();
+  const { busy, stage, history, lastResult, coreState } = useJarvis();
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { recall, reset } = useCommandHistory(history);
 
   /** Voice hands its mock transcript straight to the input. */
   const onTranscript = useCallback((text: string) => {
@@ -27,50 +30,57 @@ export const CommandCenter = memo(function CommandCenter() {
 
   const voice = useVoice(onTranscript);
 
+  // Example commands come from the registered handlers, not a separate list.
+  const examples = runtime.router
+    .list()
+    .map((h) => h.example)
+    .filter(Boolean);
+
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     const trimmed = value.trim();
     if (!trimmed || busy) return;
-    void execute(trimmed);
+    void runtime.dispatch(trimmed);
     setValue('');
-    history.reset();
+    reset();
   };
 
   /** ↑ / ↓ walk the command history, like a shell. */
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-    const recalled = history.recall(event.key === 'ArrowUp' ? -1 : 1, value);
+    const recalled = recall(event.key === 'ArrowUp' ? -1 : 1, value);
     if (recalled === null) return;
     event.preventDefault();
     setValue(recalled);
   };
 
-  // Focus the input on load so the HUD is immediately usable.
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  const last = history.entries.find((e) => e.result !== null);
-  const tone = last?.result?.ok === false ? palette.danger : palette.success;
+  const tone = lastResult?.ok === false ? palette.danger : palette.success;
 
   return (
     <div className="jv-command-center">
       <div
-        className={`jv-result ${last?.result ? '' : 'jv-result--empty'}`}
+        className={`jv-result ${lastResult ? '' : 'jv-result--empty'}`}
         style={{ '--jv-tone': tone } as React.CSSProperties}
         aria-live="polite"
       >
-        {last?.result ? (
-          <div className="jv-result__body" key={last.id}>
+        {lastResult ? (
+          <div className="jv-result__body" key={history[0]?.id ?? 'result'}>
             <div className="jv-result__head">
               <span className="jv-result__from">JARVIS</span>
-              <p className="jv-result__reply">{last.result.reply}</p>
+              <p className="jv-result__reply">{lastResult.reply}</p>
             </div>
-            {last.result.detail ? (
+            {lastResult.detail ? (
               <ul className="jv-result__detail">
-                {last.result.detail.map((line, i) => (
+                {lastResult.detail.map((line, i) => (
                   <li key={i}>{line}</li>
                 ))}
+                <li>
+                  handler: {lastResult.handlerId} · {lastResult.durationMs} ms
+                </li>
               </ul>
             ) : null}
           </div>
@@ -84,20 +94,21 @@ export const CommandCenter = memo(function CommandCenter() {
       {commandConfig.showSuggestions ? (
         <div className="jv-suggest">
           <span className="jv-suggest__label">TRY</span>
-          {exampleCommands.map((cmd) => (
+          {examples.map((example) => (
             <button
-              key={cmd}
+              key={example}
               type="button"
               className="jv-suggest__chip"
               disabled={busy}
               onClick={() => {
-                setValue(cmd);
+                setValue(example);
                 inputRef.current?.focus();
               }}
             >
-              {cmd}
+              {example}
             </button>
           ))}
+          <CommandPipeline stage={stage} />
         </div>
       ) : null}
 
@@ -130,10 +141,10 @@ export const CommandCenter = memo(function CommandCenter() {
             />
             <span className="jv-command__meta">
               {busy ? (
-                <span>{core.state.toUpperCase()}</span>
+                <span>{coreState.toUpperCase()}</span>
               ) : (
                 <>
-                  <span>↑↓ HISTORY ({history.entries.length})</span>
+                  <span>↑↓ HISTORY ({history.length})</span>
                   <span>ENTER TO RUN</span>
                   <span>SIMULATION · NO ACTION</span>
                 </>

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { voiceLabel } from '../services/voice';
+import { voiceLabel } from '../adapters/mock/mockVoice';
 import type { VoiceState } from '../types';
 import './VoiceControl.css';
 

@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { coreShapes } from '../config/jarvis.config';
-import type { CoreShapeId, CoreState } from '../types';
+import type { CoreState } from '../contracts';
+import type { CoreShapeId } from '../types';
 import { ShapeGlyph } from './ShapeGlyph';
 import { StateSelector } from './StateSelector';
 import './CoreControlBar.css';
