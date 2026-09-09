@@ -7,8 +7,10 @@
  * makes the seam real: swapping an adapter changes the answers without
  * touching a handler.
  *
- * Nothing here executes anything. No shell, no filesystem, no network, no
- * message, no transaction.
+ * Nothing here executes anything by itself. Anything beyond a read goes
+ * through `ctx.requestApproval()` first, and honours the answer — that is the
+ * only route to a write or an execution, whether the adapter behind it is mock
+ * or live.
  */
 
 import type { CommandContext, CommandHandler } from '../../contracts';
@@ -84,15 +86,36 @@ export function createMockCommandHandlers(): CommandHandler[] {
       /start\w*[\s\S]*taak|taak[\s\S]*start\w*|start (a )?task|nieuwe taak|new task/i,
       ['jarvis', 'automation'],
       async (ctx) => {
-        ctx.progress('Queueing task');
+        // Starting a task is an execution, so it needs an explicit yes even
+        // while the Automation Agent is a mock. The gate is the same one a
+        // live OpenClaw worker would go through.
+        const decision = await ctx.requestApproval({
+          kind: 'execute',
+          target: 'automation-agent',
+          summary: `Queue a task on the Automation Agent: "${ctx.request.input}"`,
+          detail: [
+            'Runs on whichever agent adapter is bound — mock or OpenClaw',
+            'No shell, filesystem or financial action is involved',
+          ],
+        });
+
+        if (decision.outcome !== 'approved') {
+          return {
+            ok: false,
+            reply: `Task not started — ${decision.reason}.`,
+            detail: [`Approval outcome: ${decision.outcome}`, 'Nothing was queued or executed'],
+          };
+        }
+
+        ctx.progress('Approval granted — queueing task');
         const agent = await ctx.runAgent('automation', 'Queue a new task');
         return {
           ok: agent.ok,
-          reply: 'Task queued on the Automation Agent (mock).',
+          reply: 'Task queued on the Automation Agent.',
           detail: [
             `Correlation id: ${ctx.request.id}`,
-            'The task exists only in this session — nothing was scheduled or executed',
-            'Phase 4 routes this to a real OpenClaw worker',
+            agent.summary,
+            'Approved by the operator before anything ran',
           ],
         };
       },
@@ -142,6 +165,59 @@ export function createMockCommandHandlers(): CommandHandler[] {
             'Served through the MemoryService interface, not a database',
           ],
         };
+      },
+    ),
+
+    handler(
+      'remember',
+      'Save to memory',
+      'Onthoud dit',
+      /onthoud|bewaar dit|remember this|save to memory/i,
+      ['jarvis', 'memory'],
+      async (ctx) => {
+        const note = ctx.request.input.replace(/^(onthoud|bewaar dit|remember this|save to memory)\s*:?\s*/i, '').trim();
+
+        // Writing to memory is a write, mock adapter or AIVM-BRAIN alike.
+        const decision = await ctx.requestApproval({
+          kind: 'write',
+          target: 'memory',
+          summary: `Save a note to memory: "${note || ctx.request.input}"`,
+          detail: [
+            `Adapter: ${ctx.memory.stats().adapter}`,
+            'Creates one record. Nothing is overwritten or deleted.',
+          ],
+        });
+
+        if (decision.outcome !== 'approved') {
+          return {
+            ok: false,
+            reply: `Nothing saved — ${decision.reason}.`,
+            detail: [`Approval outcome: ${decision.outcome}`],
+          };
+        }
+
+        ctx.progress('Approval granted — writing to memory');
+        try {
+          const record = await ctx.memory.save({
+            title: note.slice(0, 60) || 'Operator note',
+            snippet: note || ctx.request.input,
+            category: 'session',
+            source: 'operator',
+          });
+          await ctx.runAgent('memory', 'Store operator note');
+          return {
+            ok: true,
+            reply: `Saved to memory as "${record.title}".`,
+            detail: [
+              `Record id: ${record.id}`,
+              `Adapter: ${ctx.memory.stats().adapter}`,
+              `Total records: ${ctx.memory.stats().total}`,
+            ],
+          };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          return { ok: false, reply: `Save failed: ${message}`, detail: ['Nothing was written'] };
+        }
       },
     ),
 

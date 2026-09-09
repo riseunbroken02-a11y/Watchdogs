@@ -13,3 +13,5 @@ export * from './memory';
 export * from './connector';
 export * from './telemetry';
 export * from './command';
+export * from './integration';
+export * from './policy';

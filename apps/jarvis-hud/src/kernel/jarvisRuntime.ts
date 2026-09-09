@@ -13,6 +13,9 @@
 import type {
   AgentRegistry,
   AgentView,
+  ApprovalGate,
+  ApprovalRequest,
+  IntegrationBinding,
   CommandHandler,
   CommandResult,
   CommandStage,
@@ -53,6 +56,10 @@ export interface JarvisSnapshot {
   memory: { stats: MemoryStats; recent: MemoryRecord[] };
   history: CommandHistoryEntry[];
   lastResult: CommandResult | null;
+  /** What each subsystem actually resolved to — live, mock or failed. */
+  bindings: IntegrationBinding[];
+  /** Approval awaiting an operator decision, if any. */
+  pendingApproval: ApprovalRequest | null;
 }
 
 export interface JarvisRuntimeDeps {
@@ -63,7 +70,10 @@ export interface JarvisRuntimeDeps {
   memory: MemoryService;
   telemetry: TelemetryProvider;
   router: import('../contracts').CommandRouter;
+  approvals: ApprovalGate;
   handlers: CommandHandler[];
+  /** Resolved adapter bindings, produced by the adapter resolver at startup. */
+  bindings: IntegrationBinding[];
   /** Background cadence, all in ms. */
   intervals: { agentTick: number; ambient: number; connectorSweep: number };
   /** Ambient notices emitted while the system is idle. */
@@ -78,6 +88,7 @@ export interface JarvisRuntime {
   readonly agents: AgentRegistry;
   readonly connectors: ConnectorRegistry;
   readonly router: import('../contracts').CommandRouter;
+  readonly approvals: ApprovalGate;
   getSnapshot(): JarvisSnapshot;
   subscribe(listener: () => void): () => void;
   /** Runs a command through the router and records it in the history. */
@@ -91,7 +102,7 @@ export interface JarvisRuntime {
 const MAX_HISTORY = 50;
 
 export function createJarvisRuntime(deps: JarvisRuntimeDeps): JarvisRuntime {
-  const { bus, core, agents, connectors, memory, telemetry, router } = deps;
+  const { bus, core, agents, connectors, memory, telemetry, router, approvals } = deps;
 
   deps.handlers.forEach((handler) => router.register(handler));
 
@@ -101,6 +112,7 @@ export function createJarvisRuntime(deps: JarvisRuntimeDeps): JarvisRuntime {
   let lastResult: CommandResult | null = null;
   let stage: CommandStage = 'idle';
   let recent: MemoryRecord[] = [];
+  let pendingApproval: ApprovalRequest | null = approvals.pending();
   let telemetrySnapshot: TelemetrySnapshot = {
     metrics: [],
     timestamp: 0,
@@ -126,6 +138,8 @@ export function createJarvisRuntime(deps: JarvisRuntimeDeps): JarvisRuntime {
       memory: { stats: memory.stats(), recent },
       history,
       lastResult,
+      bindings: deps.bindings,
+      pendingApproval,
     };
   }
 
@@ -143,12 +157,18 @@ export function createJarvisRuntime(deps: JarvisRuntimeDeps): JarvisRuntime {
 
   core.subscribe(() => commit());
 
+  approvals.subscribe((next) => {
+    pendingApproval = next;
+    commit();
+  });
+
   return {
     bus,
     memory,
     agents,
     connectors,
     router,
+    approvals,
 
     getSnapshot: () => snapshot,
 

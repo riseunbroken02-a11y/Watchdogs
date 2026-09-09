@@ -2,20 +2,34 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { command, runtime, telemetry, voice } from '../config/jarvis.config';
+import { actionPolicy, integrations } from '../config/integrations.config';
 import { MOCK_MODE, connectorSeeds } from '../config/mock.config';
 import { createConnectorRegistry } from '../kernel/connectorRegistry';
 import { createEventBus } from '../kernel/eventBus';
 import { createMockConnectors } from '../adapters/mock/mockConnectors';
 
 /**
- * Phase 3 safety contract.
+ * Phase 4 safety contract.
  *
- * These tests fail loudly if the HUD is ever pointed at something real, or if
- * a forbidden capability sneaks into the source, without that being a
- * deliberate and visible change.
+ * These tests fail loudly if the HUD is pointed at something real, or if a
+ * forbidden capability sneaks into the source, without that being a deliberate
+ * and visible change.
+ *
+ * WHAT CHANGED IN PHASE 4, AND WHY
+ * Phase 3 forbade `fetch` outright. Phase 4 has live adapters, so it is now
+ * permitted in EXACTLY ONE file — `adapters/live/httpClient.ts` — and still
+ * forbidden everywhere else. That single chokepoint is what keeps the rest of
+ * these assertions meaningful: every request in the app is issued there, with
+ * a timeout, with `credentials: 'omit'`, and with a bearer token only when an
+ * injected provider supplies one.
+ *
+ * Everything else phase 3 forbade is still forbidden.
  */
 
 const SRC = new URL('..', import.meta.url).pathname;
+
+/** The one file allowed to touch the network, relative to src/. */
+const NETWORK_CHOKEPOINT = 'adapters/live/httpClient.ts';
 
 function sourceFiles(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -37,11 +51,25 @@ function codeOf(file: string): string {
     .replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
 
-describe('runs on mock adapters only', () => {
+describe('ships connecting to nothing', () => {
   it('mock mode is on and the mock adapter set is selected', () => {
     expect(MOCK_MODE).toBe(true);
     expect(runtime.adapters).toBe('mock');
     expect(telemetry.source).toBe('mock');
+  });
+
+  it('every integration ships disabled, with no endpoint', () => {
+    for (const [id, config] of Object.entries(integrations)) {
+      expect(config.mode, `${id}.mode`).toBe('mock');
+      expect(config.endpoint, `${id}.endpoint`).toBe('');
+    }
+  });
+
+  it('destructive and financial actions are blocked outright, not merely gated', () => {
+    expect(actionPolicy.blocked).toContain('destructive');
+    expect(actionPolicy.blocked).toContain('financial');
+    // Only reads may pass without an explicit decision.
+    expect(actionPolicy.autoApproved).toEqual(['read']);
   });
 
   it('real command execution stays switched off', () => {
@@ -70,8 +98,20 @@ describe('forbidden capabilities are absent from the source', () => {
     expect(files.length).toBeGreaterThan(30);
   });
 
+  it(`issues network requests from ${NETWORK_CHOKEPOINT} and nowhere else`, () => {
+    const callers = files
+      .filter((f) => /\bfetch\s*\(/.test(codeOf(f)))
+      .map((f) => f.replace(SRC, ''));
+    expect(callers).toEqual([NETWORK_CHOKEPOINT]);
+  });
+
+  it('the network chokepoint always times out and never sends ambient cookies', () => {
+    const code = readFileSync(join(SRC, NETWORK_CHOKEPOINT), 'utf8');
+    expect(code).toMatch(/AbortController/);
+    expect(code).toMatch(/credentials:\s*'omit'/);
+  });
+
   const FORBIDDEN: [string, RegExp][] = [
-    ['network fetch', /\bfetch\s*\(/],
     ['XMLHttpRequest', /XMLHttpRequest/],
     ['WebSocket', /new\s+WebSocket/],
     ['EventSource', /new\s+EventSource/],
@@ -89,6 +129,12 @@ describe('forbidden capabilities are absent from the source', () => {
       expect(offenders.map((f) => f.replace(SRC, ''))).toEqual([]);
     });
   }
+
+  it('the shipped credential provider supplies nothing', async () => {
+    const { nullCredentials } = await import('../adapters/live/credentials');
+    expect(await nullCredentials.getToken('memory')).toBeUndefined();
+    expect(await nullCredentials.getToken('agents')).toBeUndefined();
+  });
 
   it('contains no credential-shaped literals', () => {
     // Long opaque strings assigned to key/token/secret names.

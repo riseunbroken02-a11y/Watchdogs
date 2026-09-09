@@ -1,0 +1,48 @@
+/* Boot screen shown while adapters are probed. Same visual language as the
+   HUD, so startup does not look like a different application. */
+
+.jv-boot {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.jv-boot__ring {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--jv-accent) 25%, transparent);
+  border-top-color: var(--jv-accent);
+  box-shadow: 0 0 30px -6px var(--jv-accent);
+  animation: jv-boot-spin 900ms linear infinite;
+}
+
+@keyframes jv-boot-spin {
+  to { transform: rotate(360deg); }
+}
+
+.jv-boot__label {
+  font-size: 12px;
+  letter-spacing: 0.34em;
+  font-weight: 800;
+  color: var(--jv-accent);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--jv-accent) 55%, transparent);
+}
+
+.jv-boot__detail {
+  font-family: var(--jv-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--jv-text-dim);
+  max-width: 60ch;
+}
+
+.jv-boot--error .jv-boot__label { color: var(--jv-danger); text-shadow: none; }
+.jv-boot--error .jv-boot__detail { color: var(--jv-danger); opacity: 0.8; }

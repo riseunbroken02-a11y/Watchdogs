@@ -155,7 +155,7 @@
   align-content: start;
   /* Fixed so a returning answer never resizes the core and the side panels;
      tall enough for a reply plus four detail lines. */
-  height: 92px;
+  height: 84px;
   overflow-y: auto;
   mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
   padding: 8px 12px;

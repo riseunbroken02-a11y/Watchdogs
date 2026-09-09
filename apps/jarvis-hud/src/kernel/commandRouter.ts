@@ -9,6 +9,7 @@
 import type {
   AgentId,
   AgentRegistry,
+  ApprovalGate,
   CommandContext,
   CommandHandler,
   CommandResult,
@@ -25,6 +26,8 @@ export interface CommandRouterDeps {
   agents: AgentRegistry;
   memory: MemoryService;
   connectors: ConnectorRegistry;
+  /** Gate every non-read action goes through. */
+  approvals: ApprovalGate;
   /** Pacing of the visual pipeline, in ms. */
   timing: { listening: number; thinking: number; working: number; resolve: number };
   /** Handler used when nothing matches. */
@@ -34,7 +37,7 @@ export interface CommandRouterDeps {
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function createCommandRouter(deps: CommandRouterDeps): CommandRouter {
-  const { bus, core, agents, memory, connectors, timing, fallback } = deps;
+  const { bus, core, agents, memory, connectors, approvals, timing, fallback } = deps;
   const handlers: CommandHandler[] = [];
   let counter = 0;
 
@@ -68,6 +71,9 @@ export function createCommandRouter(deps: CommandRouterDeps): CommandRouter {
         connectors,
         progress: (message) =>
           bus.emit('system.info', { source: handler.id.toUpperCase(), message, level: 'info' }),
+        // Handlers cannot bypass this: it is the only route to a non-read
+        // action, and the commandId is stamped here rather than by the caller.
+        requestApproval: (input) => approvals.request({ ...input, commandId: id }),
       };
 
       // --- input -----------------------------------------------------------

@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { AdapterStatus } from './components/AdapterStatus';
 import { AgentsPanel } from './components/AgentsPanel';
+import { ApprovalDialog } from './components/ApprovalDialog';
 import { CommandCenter } from './components/CommandCenter';
 import { ConnectorsPanel } from './components/ConnectorsPanel';
 import { CoreControlBar } from './components/CoreControlBar';
-import { DemoDataNotice } from './components/DemoDataNotice';
 import { EventStreamPanel } from './components/EventStreamPanel';
 import { MemoryPanel } from './components/MemoryPanel';
 import { StatusBadge } from './components/StatusBadge';
@@ -77,13 +78,15 @@ function Hud() {
         <div className="jv-col jv-col--right">
           <MemoryPanel />
           <ConnectorsPanel />
-          <DemoDataNotice />
+          <AdapterStatus />
         </div>
       </main>
 
       <footer className="jv-footer">
         <CommandCenter />
       </footer>
+
+      <ApprovalDialog />
     </div>
   );
 }

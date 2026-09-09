@@ -1,0 +1,105 @@
+/* ==========================================================================
+   ADAPTER STATUS
+   Replaces the static "MOCK DATA" notice: instead of claiming everything is
+   simulated, it states per subsystem what actually resolved — and why.
+   ========================================================================== */
+
+.jv-adapters {
+  display: grid;
+  gap: 3px;
+  padding: 7px 9px;
+  border: 1px solid var(--jv-panel-border);
+  border-radius: var(--jv-radius);
+  background: var(--jv-panel);
+  backdrop-filter: blur(12px);
+}
+
+.jv-adapters--all-mock {
+  border-style: dashed;
+  border-color: rgba(251, 191, 36, 0.38);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.jv-adapters__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 1px;
+}
+
+.jv-adapters__title {
+  font-size: 8.5px;
+  letter-spacing: 0.24em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+}
+
+.jv-adapters__summary {
+  font-family: var(--jv-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--jv-text-faint);
+}
+
+.jv-adapter {
+  display: grid;
+  grid-template-columns: 6px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 0;
+}
+
+.jv-adapter__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--jv-tone);
+  box-shadow: 0 0 8px var(--jv-tone);
+}
+.jv-adapter--mock .jv-adapter__dot {
+  background: transparent;
+  border: 1px solid var(--jv-tone);
+  box-shadow: none;
+}
+
+.jv-adapter__label {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--jv-text);
+  white-space: nowrap;
+}
+
+.jv-adapter__reason {
+  font-family: var(--jv-mono);
+  font-size: 8px;
+  color: var(--jv-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.jv-adapter__state {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: var(--jv-tone);
+  border: 1px solid color-mix(in srgb, var(--jv-tone) 40%, transparent);
+  border-radius: 2px;
+  padding: 1px 4px;
+  white-space: nowrap;
+}
+.jv-adapter--mock .jv-adapter__state { border-style: dashed; }
+
+.jv-adapters__foot {
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(56, 189, 248, 0.08);
+  font-size: 8.5px;
+  line-height: 1.45;
+  color: rgba(251, 191, 36, 0.8);
+}
+
+.jv-adapters__row { display: flex; align-items: baseline; gap: 7px; min-width: 0; }

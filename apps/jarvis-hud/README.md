@@ -1,17 +1,21 @@
-# JARVIS HUD — Phase 3
+# JARVIS HUD — Phase 4
 
 A fully local, interactive command center for the AIVM-BRAIN / OpenClaw system.
 
-> **The backend is still MOCK.**
-> Every value in this HUD is generated in the browser. It performs **no** API
-> calls, runs **no** commands, opens **no** connector, reads **no** file and
-> **never requests the microphone**. Nothing in your AIVM-BRAIN, OpenClaw,
-> Claude Code, Claude-Mem, OmniRoute or MCP configuration is read or changed.
-> The whole app lives in `apps/jarvis-hud/`.
+> **Out of the box the backend is still MOCK.**
+> Every integration ships disabled with an empty endpoint, so a fresh checkout
+> performs no network activity at all, never requests the microphone, and
+> reads or changes nothing in your AIVM-BRAIN, OpenClaw, Claude Code,
+> Claude-Mem, OmniRoute or MCP configuration. There are no credentials in this
+> repository. The whole app lives in `apps/jarvis-hud/`.
 >
-> Phase 3 puts a real integration layer behind that: contracts, a
-> framework-free kernel and swappable adapters. See **[ARCHITECTURE.md](ARCHITECTURE.md)**
-> for how agents, memory and connectors plug in later.
+> Phase 4 adds real adapters for AIVM-BRAIN, OpenClaw, a connector broker and a
+> metrics endpoint — all behind feature flags that ship **off**. Point one at a
+> running service and the HUD binds it; the ADAPTERS panel states per subsystem
+> what is live and what fell back to mock, and why.
+>
+> - **[INTEGRATIONS.md](INTEGRATIONS.md)** — how to switch a live adapter on
+> - **[ARCHITECTURE.md](ARCHITECTURE.md)** — how the layers fit together
 
 ---
 
@@ -192,9 +196,12 @@ apps/jarvis-hud/src/
 ├── state/         React binding: provider + useJarvis()
 ├── components/    panels and widgets
 ├── core/          the visual core and its eight shapes
-├── config/        jarvis.config.ts (look & behaviour) · mock.config.ts (content)
+├── contracts/     …including integration.ts and policy.ts
+├── adapters/live/ real adapters + the single network chokepoint
+├── config/        jarvis.config.ts (look) · mock.config.ts (content) ·
+│                  integrations.config.ts (feature flags + action policy)
 ├── utils/         small shared helpers
-└── __tests__/     8 suites, 77 tests
+└── __tests__/     13 suites, 134 tests
 ```
 
 Dependencies point inward only: UI → kernel → contracts, adapters → contracts.

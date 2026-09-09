@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAgentRegistry } from '../kernel/agentRegistry';
+import { createApprovalGate } from '../kernel/approvalGate';
 import { createCommandRouter } from '../kernel/commandRouter';
 import { createConnectorRegistry } from '../kernel/connectorRegistry';
 import { createCoreMachine } from '../kernel/coreMachine';
@@ -11,11 +12,12 @@ import {
   createFallbackHandler,
   createMockCommandHandlers,
 } from '../adapters/mock/mockCommandHandlers';
-import type { CommandRouter, CoreMachine, CoreState, EventBus, JarvisEventName } from '../contracts';
+import type { ApprovalGate, CommandRouter, CoreMachine, CoreState, EventBus, JarvisEventName } from '../contracts';
 
 let bus: EventBus;
 let core: CoreMachine;
 let router: CommandRouter;
+let approvals: ApprovalGate;
 
 /** Zero timings so the pipeline runs instantly in tests. */
 function build() {
@@ -30,12 +32,19 @@ function build() {
 
   const memory = createMockMemory(bus);
 
+  // Reads pass; anything else is denied unless a test approves it explicitly.
+  approvals = createApprovalGate({
+    bus,
+    policy: { blocked: ['destructive', 'financial'], autoApproved: ['read'], timeoutMs: 50 },
+  });
+
   router = createCommandRouter({
     bus,
     core,
     agents,
     memory,
     connectors,
+    approvals,
     timing: { listening: 0, thinking: 0, working: 0, resolve: 0 },
     fallback: createFallbackHandler(),
   });

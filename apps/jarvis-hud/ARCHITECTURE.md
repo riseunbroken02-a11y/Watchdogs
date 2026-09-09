@@ -1,14 +1,20 @@
 # JARVIS HUD — Architecture
 
-Phase 3. The HUD runs on a kernel that knows nothing about React, and adapters
+Phase 4. The HUD runs on a kernel that knows nothing about React, and adapters
 that know nothing about the UI. Everything between them is a TypeScript
 interface.
 
-> **Still local-only.** Every adapter shipped today is a mock. Nothing performs
-> a network request, opens a socket, starts an OAuth flow, reads a credential,
-> runs a shell command, touches the filesystem, sends a message or moves money.
-> `src/__tests__/safety.test.ts` scans the source and fails if any of that
-> appears.
+> **Live-capable, shipped off.** Real adapters exist for AIVM-BRAIN, OpenClaw,
+> a connector broker and a metrics endpoint, but every integration ships as
+> `mock` with an empty endpoint, so a fresh checkout performs no network
+> activity at all. Switching one on is documented in
+> [INTEGRATIONS.md](INTEGRATIONS.md).
+>
+> Two things enforce that in code rather than by convention:
+> `src/adapters/live/httpClient.ts` is the only file allowed to call `fetch`,
+> and `src/kernel/approvalGate.ts` is the only route to any action that is not
+> a plain read. `src/__tests__/safety.test.ts` asserts both, plus the shipped
+> defaults, and scans the source for everything that stays forbidden.
 
 ---
 
@@ -29,9 +35,10 @@ interface.
 │                · connector registry · command router · runtime. │
 │                Framework-free and adapter-free.                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  ADAPTERS      src/adapters/mock  (later: src/adapters/live)    │
+│  ADAPTERS      src/adapters/mock · src/adapters/live            │
 │                The only code that knows where data really comes │
-│                from. Implements the contracts.                  │
+│                from. Implements the contracts. All network      │
+│                traffic goes through live/httpClient.ts.         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -41,11 +48,24 @@ either, except in the single assembly file described below.
 
 ### The one place adapters are chosen
 
-`src/state/JarvisProvider.tsx` calls `createMockRuntime()` from
-`src/adapters/mock/index.ts`. That assembly file is the only module that names
-concrete adapters. Adding a live adapter set means writing a sibling
-`src/adapters/live/index.ts` and switching `runtime.adapters` in
-`src/config/jarvis.config.ts`. No panel changes.
+`src/adapters/index.ts` is the only module that names concrete adapters. It
+resolves each subsystem independently through `src/kernel/adapterResolver.ts`:
+probe the configured endpoint, bind live if it answers, otherwise fall back to
+mock and record why. Every outcome becomes an `IntegrationBinding` the ADAPTERS
+panel renders, so what is live is visible on screen rather than buried in a
+config file.
+
+Memory can be live while agents stay mock. A subsystem that fails never takes
+the HUD down — it serves mock data and is flagged.
+
+### The approval gate
+
+Once real systems are reachable, anything beyond reading has to be asked for.
+`ctx.requestApproval()` is the only route to a non-read action; the router
+stamps the command id so a handler cannot forge one. `read` passes;
+`write` and `execute` open a dialog; `destructive` and `financial` are blocked
+by policy before a dialog could exist. Focus defaults to DENY, Escape denies,
+and an unanswered request auto-denies — silence is not consent.
 
 ---
 

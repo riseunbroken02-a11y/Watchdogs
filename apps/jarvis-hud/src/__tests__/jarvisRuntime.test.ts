@@ -3,7 +3,14 @@ import { createMockRuntime } from '../adapters/mock';
 import type { CoreState } from '../contracts';
 
 /** Instant pacing: the on-screen timings exist for readability, not logic. */
-const instant = () => createMockRuntime({ timing: { listening: 0, thinking: 0, working: 0, resolve: 0 } });
+const instant = () =>
+  createMockRuntime({ timing: { listening: 0, thinking: 0, working: 0, resolve: 0 } });
+
+/**
+ * A read-only command. "Start een taak" and "Onthoud dit" now go through the
+ * approval gate, so they are exercised in approvalFlow.test.ts instead.
+ */
+const READ_COMMAND = 'Open mijn projecten';
 
 /**
  * Runtime-level behaviour: how the kernel composes the pieces, and the
@@ -11,8 +18,8 @@ const instant = () => createMockRuntime({ timing: { listening: 0, thinking: 0, w
  * a transitional state".
  */
 describe('jarvis runtime', () => {
-  it('boots idle, not busy, with every registry populated', () => {
-    const runtime = instant();
+  it('boots idle, not busy, with every registry populated', async () => {
+    const runtime = await instant();
     const snapshot = runtime.getSnapshot();
 
     expect(snapshot.coreState).toBe('idle');
@@ -24,21 +31,21 @@ describe('jarvis runtime', () => {
   });
 
   it('rebuilds its snapshot reference on change, so subscribers can diff it', async () => {
-    const runtime = instant();
+    const runtime = await instant();
     const first = runtime.getSnapshot();
     let notified = 0;
     runtime.subscribe(() => {
       notified += 1;
     });
 
-    await runtime.dispatch('Start een taak');
+    await runtime.dispatch(READ_COMMAND);
 
     expect(notified).toBeGreaterThan(0);
     expect(runtime.getSnapshot()).not.toBe(first);
   });
 
-  it('previewing a transitional state by hand does not lock the operator out', () => {
-    const runtime = instant();
+  it('previewing a transitional state by hand does not lock the operator out', async () => {
+    const runtime = await instant();
 
     // listening/thinking/working are transitional, but no command owns the
     // core, so the operator must be able to step back out again.
@@ -53,8 +60,8 @@ describe('jarvis runtime', () => {
   });
 
   it('blocks the manual preview only while a command is running', async () => {
-    const runtime = instant();
-    const inFlight = runtime.dispatch('Start een taak');
+    const runtime = await instant();
+    const inFlight = runtime.dispatch(READ_COMMAND);
 
     // Give the router a tick to take ownership.
     await new Promise((r) => setTimeout(r, 20));
@@ -67,37 +74,37 @@ describe('jarvis runtime', () => {
   });
 
   it('recovers a hand-parked core when the next command starts', async () => {
-    const runtime = instant();
+    const runtime = await instant();
     runtime.forceCoreState('error');
 
-    const result = await runtime.dispatch('Start een taak');
+    const result = await runtime.dispatch(READ_COMMAND);
 
     expect(result?.ok).toBe(true);
     expect(runtime.getSnapshot().coreState).toBe('idle');
   });
 
   it('refuses concurrent dispatches and records history newest first', async () => {
-    const runtime = instant();
-    const first = runtime.dispatch('Start een taak');
-    expect(await runtime.dispatch('Open mijn projecten')).toBeNull();
+    const runtime = await instant();
+    const first = runtime.dispatch(READ_COMMAND);
+    expect(await runtime.dispatch('Zoek in mijn geheugen')).toBeNull();
     await first;
 
-    await runtime.dispatch('Open mijn projecten');
+    await runtime.dispatch('Zoek in mijn geheugen');
     const { history } = runtime.getSnapshot();
     expect(history).toHaveLength(2);
-    expect(history[0].input).toBe('Open mijn projecten');
+    expect(history[0].input).toBe('Zoek in mijn geheugen');
     expect(history[0].result?.ok).toBe(true);
     expect(runtime.getSnapshot().stage).toBe('result');
   });
 
   it('ignores empty input', async () => {
-    const runtime = instant();
+    const runtime = await instant();
     expect(await runtime.dispatch('   ')).toBeNull();
     expect(runtime.getSnapshot().history).toHaveLength(0);
   });
 
-  it('start() is idempotent, so StrictMode cannot double the heartbeats', () => {
-    const runtime = instant();
+  it('start() is idempotent, so StrictMode cannot double the heartbeats', async () => {
+    const runtime = await instant();
     const stopA = runtime.start();
     const stopB = runtime.start();
     expect(stopA).toBe(stopB);
@@ -105,8 +112,8 @@ describe('jarvis runtime', () => {
   });
 
   it('records every bus event in the activity log, newest first', async () => {
-    const runtime = instant();
-    await runtime.dispatch('Open mijn projecten');
+    const runtime = await instant();
+    await runtime.dispatch(READ_COMMAND);
     const names = runtime.getSnapshot().events.map((e) => e.name);
 
     expect(names[0]).toBe('command.completed');

@@ -1,0 +1,146 @@
+/* ==========================================================================
+   APPROVAL DIALOG
+   Nothing beyond a read happens without an explicit answer here.
+   ========================================================================== */
+
+.jv-approval {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(2, 6, 12, 0.72);
+  backdrop-filter: blur(4px);
+  animation: jv-approval-in 180ms var(--jv-ease) both;
+}
+
+@keyframes jv-approval-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.jv-approval__card {
+  position: relative;
+  width: min(560px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px 16px;
+  background: var(--jv-bg-elevated);
+  border: 1px solid color-mix(in srgb, var(--jv-warning) 45%, transparent);
+  border-radius: var(--jv-radius);
+  box-shadow: 0 0 60px -18px var(--jv-warning), 0 20px 60px -30px #000;
+  animation: jv-approval-rise 220ms var(--jv-ease) both;
+}
+
+@keyframes jv-approval-rise {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.jv-approval__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jv-approval__kind {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  font-weight: 800;
+  color: var(--jv-warning);
+  border: 1px solid color-mix(in srgb, var(--jv-warning) 50%, transparent);
+  border-radius: 2px;
+  padding: 2px 6px;
+}
+
+.jv-approval__title {
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  font-weight: 800;
+  color: var(--jv-text);
+  margin: 0;
+}
+
+.jv-approval__target {
+  font-family: var(--jv-mono);
+  font-size: 9px;
+  color: var(--jv-text-faint);
+  margin-left: auto;
+}
+
+.jv-approval__summary {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--jv-text);
+  margin: 0;
+}
+
+.jv-approval__detail {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  font-family: var(--jv-mono);
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--jv-text-dim);
+}
+.jv-approval__detail li::before { content: '· '; color: var(--jv-text-faint); }
+
+.jv-approval__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.jv-approval__timer {
+  font-family: var(--jv-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--jv-text-faint);
+  margin-right: auto;
+}
+
+.jv-approval__btn {
+  padding: 9px 20px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  border-radius: var(--jv-radius);
+  border: 1px solid;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+
+.jv-approval__btn--deny {
+  color: var(--jv-text-dim);
+  background: transparent;
+  border-color: rgba(56, 189, 248, 0.2);
+}
+.jv-approval__btn--deny:hover {
+  color: var(--jv-danger);
+  border-color: color-mix(in srgb, var(--jv-danger) 55%, transparent);
+}
+
+.jv-approval__btn--approve {
+  color: var(--jv-warning);
+  background: color-mix(in srgb, var(--jv-warning) 12%, transparent);
+  border-color: color-mix(in srgb, var(--jv-warning) 55%, transparent);
+}
+.jv-approval__btn--approve:hover {
+  background: color-mix(in srgb, var(--jv-warning) 22%, transparent);
+  box-shadow: 0 0 28px -8px var(--jv-warning);
+  color: #fff;
+}
+
+.jv-approval__btn:focus-visible { outline: 1px solid var(--jv-warning); outline-offset: 2px; }
+
+.jv-approval__note {
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--jv-text-faint);
+  border-top: 1px solid rgba(56, 189, 248, 0.1);
+  padding-top: 8px;
+}

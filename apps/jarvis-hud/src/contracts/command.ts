@@ -38,6 +38,13 @@ export interface CommandContext {
   connectors: import('./connector').ConnectorRegistry;
   /** Reports progress; surfaced as events. */
   progress(message: string): void;
+  /**
+   * The ONLY way to perform anything that is not a plain read.
+   * Returns the operator's decision; a handler must honour it.
+   */
+  requestApproval(
+    input: Omit<import('./policy').ApprovalRequest, 'id' | 'commandId' | 'requestedAt' | 'expiresAt'>,
+  ): Promise<import('./policy').ApprovalDecision>;
 }
 
 export interface CommandHandler {
