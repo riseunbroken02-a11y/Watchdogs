@@ -7,16 +7,18 @@ import { ConnectorsPanel } from './components/ConnectorsPanel';
 import { CoreControlBar } from './components/CoreControlBar';
 import { EventStreamPanel } from './components/EventStreamPanel';
 import { MemoryPanel } from './components/MemoryPanel';
+import { OrbStudio } from './components/OrbStudio';
 import { StatusBadge } from './components/StatusBadge';
 import { SystemPanel } from './components/SystemPanel';
-import { defaultShape, identity } from './config/jarvis.config';
+import { identity } from './config/jarvis.config';
 import { CoreStage } from './core/CoreStage';
 import { useClock } from './hooks/useClock';
 import { useThemeVars } from './hooks/useThemeVars';
+import { AppearanceProvider } from './state/AppearanceProvider';
 import { JarvisProvider } from './state/JarvisProvider';
 import { useRuntime } from './state/jarvisContext';
+import { useAppearance, useAppearanceStore } from './state/useAppearance';
 import { useJarvis } from './state/useJarvis';
-import type { CoreShapeId } from './types';
 import './App.css';
 
 /**
@@ -31,12 +33,15 @@ import './App.css';
  * else is read from the kernel through useJarvis().
  */
 function Hud() {
-  const [shape, setShape] = useState<CoreShapeId>(defaultShape);
   const runtime = useRuntime();
+  const appearance = useAppearanceStore();
+  const theme = useAppearance();
   const { coreState, busy } = useJarvis();
   const clock = useClock();
+  const [studioOpen, setStudioOpen] = useState(false);
 
-  useThemeVars(coreState);
+  // The theme owns the shape now, so the choice survives a reload.
+  useThemeVars(coreState, theme);
 
   return (
     <div className="jv-app">
@@ -64,13 +69,15 @@ function Hud() {
         </div>
 
         <div className="jv-center">
-          <CoreStage shape={shape} state={coreState} />
+          <CoreStage shape={theme.shape} state={coreState} />
           <CoreControlBar
-            shape={shape}
-            onShape={setShape}
+            shape={theme.shape}
+            onShape={(shape) => appearance.patch({ shape })}
             state={coreState}
             onState={runtime.forceCoreState}
             locked={busy}
+            studioOpen={studioOpen}
+            onToggleStudio={() => setStudioOpen((open) => !open)}
           />
           <EventStreamPanel />
         </div>
@@ -87,14 +94,24 @@ function Hud() {
       </footer>
 
       <ApprovalDialog />
+
+      <OrbStudio
+        open={studioOpen}
+        onClose={() => setStudioOpen(false)}
+        coreState={coreState}
+        onPreviewState={runtime.forceCoreState}
+        canPreview={!busy}
+      />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <JarvisProvider>
-      <Hud />
-    </JarvisProvider>
+    <AppearanceProvider>
+      <JarvisProvider>
+        <Hud />
+      </JarvisProvider>
+    </AppearanceProvider>
   );
 }

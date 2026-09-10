@@ -1,6 +1,6 @@
 # JARVIS HUD — Architecture
 
-Phase 4. The HUD runs on a kernel that knows nothing about React, and adapters
+Phase 5. The HUD runs on a kernel that knows nothing about React, and adapters
 that know nothing about the UI. Everything between them is a TypeScript
 interface.
 
@@ -12,8 +12,9 @@ interface.
 >
 > Two things enforce that in code rather than by convention:
 > `src/adapters/live/httpClient.ts` is the only file allowed to call `fetch`,
-> and `src/kernel/approvalGate.ts` is the only route to any action that is not
-> a plain read. `src/__tests__/safety.test.ts` asserts both, plus the shipped
+> `src/adapters/local/localAppearanceStorage.ts` is the only one allowed to
+> touch browser storage, and `src/kernel/approvalGate.ts` is the only route to
+> any action that is not a plain read. `src/__tests__/safety.test.ts` asserts both, plus the shipped
 > defaults, and scans the source for everything that stays forbidden.
 
 ---
@@ -57,6 +58,34 @@ config file.
 
 Memory can be live while agents stay mock. A subsystem that fails never takes
 the HUD down — it serves mock data and is flagged.
+
+### The appearance layer
+
+The orb's look is data, not code. One `OrbTheme` object — shape, size, glow,
+speed, gradient, motion and a style per core state — drives every visual
+property of the core, and the studio is simply one editor for it.
+
+```
+OrbStudio ─► AppearanceStore ─► CSS custom properties ─► the core repaints
+  (UI)         (kernel)            (useThemeVars)         (no React render)
+                   │
+                   └─► AppearanceStorage ─► localStorage | memory
+                        (contract)           (adapters/local)
+```
+
+`src/kernel/appearanceStore.ts` owns validation: every value that arrives from
+outside — a preset, a saved theme, a slider — is clamped and type-checked
+there, so a corrupt save or a hand-edited key can never put the HUD into an
+unrenderable state. `normaliseTheme()` repairs field by field and discards a
+save from an older schema version rather than half-applying it.
+
+`src/adapters/local/localAppearanceStorage.ts` is the only file allowed to touch
+browser storage, the same single-chokepoint pattern as the network client. It
+stores appearance only, under one key, and every access is wrapped: a private
+window or a full quota costs the operator persistence, never the interface.
+
+Changes reach the screen through CSS custom properties rather than React
+re-renders, so dragging a slider repaints the orb without re-mounting anything.
 
 ### The approval gate
 
@@ -322,6 +351,9 @@ seconds that make it readable on screen.
 | `connectorRegistry.test.ts` | health checks, transition-only events, sweep summary |
 | `memoryService.test.ts` | search / recall / save / recent against the contract |
 | `jarvisRuntime.test.ts` | snapshot behaviour, busy semantics, idempotent start |
+| `appearanceStore.test.ts` | theme editing, clamping, presets, reset, repair of corrupt saves |
+| `appearanceStorage.test.ts` | round-trip, quota failure, blocked storage, what is stored |
+| `color.test.ts` | hex ⇄ HSL round-trip and the gradient derivations |
 | `safety.test.ts` | mock mode on, and a source scan for forbidden capabilities |
 
 `npm run verify` runs lint, typecheck and tests together.
@@ -341,7 +373,7 @@ The phase-3 guarantees, and where each is enforced:
 | No microphone or recording | source scan (`useVoice` is the only voice module) |
 | No shell or filesystem writes | source scan |
 | No secrets in source or environment | source scan for credential literals and `process.env` |
-| No browser storage | source scan, and a browser assertion that both stores stay empty |
+| Browser storage only in the appearance chokepoint | source scan, plus a test asserting it stores appearance under one key and nothing else |
 
 The source scan strips comments before matching, so documentation that
 *mentions* a forbidden API never trips it — only real code does.

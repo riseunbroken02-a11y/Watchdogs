@@ -19,7 +19,7 @@ export const identity = {
   name: 'JARVIS',
   subtitle: 'AIVM-BRAIN COMMAND CENTER',
   /** Shown in the header + the demo banner. */
-  build: 'PHASE 4 · LIVE-READY',
+  build: 'PHASE 5 · ORB STUDIO',
 } as const;
 
 /* ------------------------------------------------------------------ colours */

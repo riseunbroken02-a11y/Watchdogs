@@ -12,7 +12,9 @@
 
 .jv-stage__frame {
   position: relative;
-  width: min(52vh, 100%);
+  /* --jv-orb-size is the theme's scale; the min() still bounds it to the
+     stage so a large orb cannot overflow. */
+  width: min(calc(52vh * var(--jv-orb-size)), 100%);
   /* aspect-ratio + max-height lets the core shrink when the stage is short
      (tablet / stacked layout) instead of overflowing it. */
   max-width: 100%;

@@ -2,7 +2,9 @@
    CORE SHAPES
    Every shape renders inside a square .jv-shape stage and reads two inputs:
      --jv-state : accent colour of the current core state
+     --jv-state-2 : second gradient stop, derived from the theme
      --jv-i     : 0..1 activity intensity (inherited, animated by the browser)
+     --jv-glow  : glow multiplier from the orb theme
      --tempo    : animation speed multiplier (lower = faster)
    ========================================================================== */
 
@@ -13,6 +15,8 @@
   display: grid;
   place-items: center;
   --tempo: 1;
+  --jv-pulse-bias: 1;
+  --jv-rotate-bias: 1;
 }
 
 .jv-shape svg {
@@ -60,23 +64,23 @@
   width: 62%;
   aspect-ratio: 1;
   border-radius: 50%;
-  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias)) ease-in-out infinite;
   background:
     radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.55), transparent 34%),
-    radial-gradient(circle at 42% 38%, color-mix(in srgb, var(--jv-state) 85%, #fff), transparent 58%),
+    radial-gradient(circle at 42% 38%, color-mix(in srgb, var(--jv-state-2) 85%, #fff), transparent 58%),
     radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 55%, #000) 30%, #030913 78%);
   box-shadow:
     inset 0 0 60px color-mix(in srgb, var(--jv-state) 45%, transparent),
     inset -18px -22px 70px rgba(0, 0, 0, 0.85),
-    0 0 calc(50px + var(--jv-i) * 90px) color-mix(in srgb, var(--jv-state) 40%, transparent),
-    0 0 calc(120px + var(--jv-i) * 160px) color-mix(in srgb, var(--jv-state) 18%, transparent);
+    0 0 calc(50px + var(--jv-i) * var(--jv-glow) * 90px) color-mix(in srgb, var(--jv-state) 40%, transparent),
+    0 0 calc(120px + var(--jv-i) * var(--jv-glow) * 160px) color-mix(in srgb, var(--jv-state) 18%, transparent);
 }
 
 .jv-orb__sheen {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 115%, color-mix(in srgb, var(--jv-state) 40%, transparent), transparent 55%);
+  background: radial-gradient(circle at 50% 115%, color-mix(in srgb, var(--jv-state-2) 55%, transparent), transparent 55%);
   mix-blend-mode: screen;
 }
 
@@ -85,7 +89,7 @@
   inset: -9%;
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--jv-state) 30%, transparent);
-  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * 1.4) ease-in-out infinite;
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias) * 1.4) ease-in-out infinite;
 }
 .jv-orb__halo--2 { inset: -18%; opacity: 0.5; animation-delay: -0.6s; }
 
@@ -96,15 +100,15 @@
   border-top: 1px solid color-mix(in srgb, var(--jv-state) 45%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--jv-state) 20%, transparent);
   transform: rotateX(74deg);
-  animation: jv-spin calc(var(--jv-rotate) * var(--tempo)) linear infinite;
+  animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias)) linear infinite;
 }
 
 /* =========================================================  RING  ========= */
 
 .jv-ring__group { transform-origin: 50% 50%; }
-.jv-ring__group--a { animation: jv-spin calc(var(--jv-rotate) * var(--tempo)) linear infinite; }
-.jv-ring__group--b { animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * 1.6) linear infinite; }
-.jv-ring__group--c { animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * 2.4) linear infinite; }
+.jv-ring__group--a { animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias)) linear infinite; }
+.jv-ring__group--b { animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias) * 1.6) linear infinite; }
+.jv-ring__group--c { animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias) * 2.4) linear infinite; }
 
 .jv-ring__track {
   fill: none;
@@ -122,38 +126,38 @@
   stroke-width: 1;
 }
 .jv-ring__core {
-  fill: color-mix(in srgb, var(--jv-state) 20%, transparent);
+  fill: color-mix(in srgb, var(--jv-state-2) 24%, transparent);
   stroke: var(--jv-state);
   stroke-width: 1.2;
-  filter: drop-shadow(0 0 calc(8px + var(--jv-i) * 22px) var(--jv-state));
-  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  filter: drop-shadow(0 0 calc(8px + var(--jv-i) * var(--jv-glow) * 22px) var(--jv-state));
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias)) ease-in-out infinite;
   transform-origin: 50% 50%;
 }
 
 /* ======================================================  HEXAGON  ========= */
 
 .jv-hex__group { transform-origin: 50% 50%; }
-.jv-hex__group--slow { animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * 3) linear infinite; }
-.jv-hex__group--rev { animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * 2) linear infinite; }
+.jv-hex__group--slow { animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias) * 3) linear infinite; }
+.jv-hex__group--rev { animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias) * 2) linear infinite; }
 
 .jv-hex__outline {
   fill: none;
   stroke: var(--jv-state);
   stroke-width: 1.4;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 calc(4px + var(--jv-i) * 14px) color-mix(in srgb, var(--jv-state) 70%, transparent));
+  filter: drop-shadow(0 0 calc(4px + var(--jv-i) * var(--jv-glow) * 14px) color-mix(in srgb, var(--jv-state) 70%, transparent));
 }
 .jv-hex__outline--faint { stroke-opacity: 0.28; stroke-width: 1; filter: none; }
 .jv-hex__fill {
-  fill: color-mix(in srgb, var(--jv-state) 12%, transparent);
+  fill: color-mix(in srgb, var(--jv-state-2) 16%, transparent);
   stroke: none;
-  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias)) ease-in-out infinite;
 }
 .jv-hex__line {
   stroke: color-mix(in srgb, var(--jv-state) 55%, transparent);
   stroke-width: 0.8;
   stroke-dasharray: 4 6;
-  animation: jv-dash calc(var(--jv-rotate) * var(--tempo) * 1.2) linear infinite;
+  animation: jv-dash calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias) * 1.2) linear infinite;
 }
 .jv-hex__node {
   fill: var(--jv-state);
@@ -175,16 +179,16 @@
   border-radius: 46% 46% 42% 42% / 48%;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--jv-state) 26%, transparent),
+    color-mix(in srgb, var(--jv-state-2) 30%, transparent),
     color-mix(in srgb, var(--jv-state) 8%, transparent) 55%,
     transparent
   );
   border: 1px solid color-mix(in srgb, var(--jv-state) 40%, transparent);
   box-shadow:
     inset 0 0 50px color-mix(in srgb, var(--jv-state) 22%, transparent),
-    0 0 calc(30px + var(--jv-i) * 70px) color-mix(in srgb, var(--jv-state) 25%, transparent);
+    0 0 calc(30px + var(--jv-i) * var(--jv-glow) * 70px) color-mix(in srgb, var(--jv-state) 25%, transparent);
   backdrop-filter: blur(2px);
-  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias)) ease-in-out infinite;
 }
 .jv-holo__scanlines {
   position: absolute;
@@ -220,7 +224,7 @@
   border-radius: 50%;
   background: radial-gradient(ellipse at center, color-mix(in srgb, var(--jv-state) 60%, transparent), transparent 70%);
   filter: blur(2px);
-  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias)) ease-in-out infinite;
 }
 .jv-holo__particle {
   position: absolute;
@@ -236,8 +240,8 @@
 
 /* ======================================================  REACTOR  ======== */
 
-.jv-reactor__spin { transform-origin: 50% 50%; animation: jv-spin calc(var(--jv-rotate) * var(--tempo)) linear infinite; }
-.jv-reactor__spin-rev { transform-origin: 50% 50%; animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * 1.8) linear infinite; }
+.jv-reactor__spin { transform-origin: 50% 50%; animation: jv-spin calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias)) linear infinite; }
+.jv-reactor__spin-rev { transform-origin: 50% 50%; animation: jv-spin-rev calc(var(--jv-rotate) * var(--tempo) * var(--jv-rotate-bias) * 1.8) linear infinite; }
 
 .jv-reactor__housing {
   fill: none;
@@ -258,10 +262,10 @@
   stroke-width: 1.2;
 }
 .jv-reactor__core {
-  fill: color-mix(in srgb, var(--jv-state) 65%, #fff);
-  filter: drop-shadow(0 0 calc(14px + var(--jv-i) * 40px) var(--jv-state));
+  fill: color-mix(in srgb, var(--jv-state-2) 65%, #fff);
+  filter: drop-shadow(0 0 calc(14px + var(--jv-i) * var(--jv-glow) * 40px) var(--jv-state));
   transform-origin: 50% 50%;
-  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * 0.8) ease-in-out infinite;
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias) * 0.8) ease-in-out infinite;
 }
 .jv-reactor__inner-ring {
   fill: none;
@@ -270,7 +274,7 @@
 }
 .jv-reactor__glow {
   fill: color-mix(in srgb, var(--jv-state) 18%, transparent);
-  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias)) ease-in-out infinite;
 }
 
 /* =========================================================  WAVE  ======== */
@@ -285,9 +289,14 @@
   stroke: var(--jv-state);
   stroke-width: 2;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 calc(4px + var(--jv-i) * 16px) color-mix(in srgb, var(--jv-state) 80%, transparent));
+  filter: drop-shadow(0 0 calc(4px + var(--jv-i) * var(--jv-glow) * 16px) color-mix(in srgb, var(--jv-state) 80%, transparent));
 }
-.jv-wave__path--ghost { stroke-opacity: 0.3; stroke-width: 1.2; filter: none; }
+.jv-wave__path--ghost {
+  stroke: var(--jv-state-2);
+  stroke-opacity: 0.35;
+  stroke-width: 1.2;
+  filter: none;
+}
 .jv-wave__bar {
   fill: var(--jv-state);
   opacity: 0.75;
@@ -300,11 +309,11 @@
   aspect-ratio: 1;
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--jv-state) 70%, transparent);
-  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 22%, transparent), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state-2) 30%, transparent), transparent 70%);
   box-shadow:
-    0 0 calc(24px + var(--jv-i) * 60px) color-mix(in srgb, var(--jv-state) 45%, transparent),
+    0 0 calc(24px + var(--jv-i) * var(--jv-glow) * 60px) color-mix(in srgb, var(--jv-state) 45%, transparent),
     inset 0 0 30px color-mix(in srgb, var(--jv-state) 25%, transparent);
-  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo)) ease-in-out infinite;
+  animation: jv-breathe calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias)) ease-in-out infinite;
 }
 
 /* =======================================================  CUSTOM  ======== */
@@ -320,7 +329,7 @@
   background: color-mix(in srgb, var(--jv-state) 5%, transparent);
   text-align: center;
   padding: 24px;
-  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * 1.6) ease-in-out infinite;
+  animation: jv-flicker calc(var(--jv-pulse) * var(--tempo) * var(--jv-pulse-bias) * 1.6) ease-in-out infinite;
 }
 .jv-custom__title {
   font-size: 15px;
@@ -340,4 +349,29 @@
   color: var(--jv-state);
   opacity: 0.8;
   word-break: break-all;
+}
+
+/* ====================================================  MOTION STYLES  =====
+   `--jv-pulse` and `--jv-rotate` already carry the theme's speed. A motion
+   style changes the BALANCE between breathing and turning, by biasing each
+   duration independently.
+   ========================================================================== */
+
+:root[data-motion='pulse'] .jv-shape {
+  --jv-pulse-bias: 0.55;
+  --jv-rotate-bias: 2.2;
+}
+
+:root[data-motion='orbit'] .jv-shape {
+  --jv-pulse-bias: 2.4;
+  --jv-rotate-bias: 0.4;
+}
+
+/* STATIC holds the core still without unmounting anything, so switching back
+   to a moving style resumes instantly. */
+:root[data-motion='static'] .jv-shape,
+:root[data-motion='static'] .jv-shape *,
+:root[data-motion='static'] .jv-shape *::before,
+:root[data-motion='static'] .jv-shape *::after {
+  animation: none !important;
 }

@@ -6,9 +6,9 @@
 
 .jv-state-btn {
   position: relative;
-  padding: 6px 10px;
+  padding: 6px 9px;
   font-size: 9px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   font-weight: 700;
   color: var(--jv-text-dim);
   background: transparent;

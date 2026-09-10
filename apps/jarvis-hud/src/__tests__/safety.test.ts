@@ -9,7 +9,7 @@ import { createEventBus } from '../kernel/eventBus';
 import { createMockConnectors } from '../adapters/mock/mockConnectors';
 
 /**
- * Phase 4 safety contract.
+ * Phase 5 safety contract.
  *
  * These tests fail loudly if the HUD is pointed at something real, or if a
  * forbidden capability sneaks into the source, without that being a deliberate
@@ -23,6 +23,12 @@ import { createMockConnectors } from '../adapters/mock/mockConnectors';
  * a timeout, with `credentials: 'omit'`, and with a bearer token only when an
  * injected provider supplies one.
  *
+ * WHAT CHANGED IN PHASE 5, AND WHY
+ * Phase 5 persists the orb theme, so `localStorage` is now permitted in
+ * EXACTLY ONE file — `adapters/local/localAppearanceStorage.ts` — and still
+ * forbidden everywhere else. What it stores is asserted separately in
+ * appearanceStorage.test.ts: appearance only, under one key, no identifiers.
+ *
  * Everything else phase 3 forbade is still forbidden.
  */
 
@@ -30,6 +36,9 @@ const SRC = new URL('..', import.meta.url).pathname;
 
 /** The one file allowed to touch the network, relative to src/. */
 const NETWORK_CHOKEPOINT = 'adapters/live/httpClient.ts';
+
+/** The one file allowed to touch browser storage, relative to src/. */
+const STORAGE_CHOKEPOINT = 'adapters/local/localAppearanceStorage.ts';
 
 function sourceFiles(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -105,6 +114,19 @@ describe('forbidden capabilities are absent from the source', () => {
     expect(callers).toEqual([NETWORK_CHOKEPOINT]);
   });
 
+  it(`reads browser storage from ${STORAGE_CHOKEPOINT} and nowhere else`, () => {
+    const callers = files
+      .filter((f) => /\blocalStorage\b/.test(codeOf(f)))
+      .map((f) => f.replace(SRC, ''));
+    expect(callers).toEqual([STORAGE_CHOKEPOINT]);
+  });
+
+  it('the storage chokepoint wraps every access, so blocked storage cannot break boot', () => {
+    const code = readFileSync(join(SRC, STORAGE_CHOKEPOINT), 'utf8');
+    // One try/catch per access: probe, load, save, clear.
+    expect((code.match(/try \{/g) ?? []).length).toBeGreaterThanOrEqual(4);
+  });
+
   it('the network chokepoint always times out and never sends ambient cookies', () => {
     const code = readFileSync(join(SRC, NETWORK_CHOKEPOINT), 'utf8');
     expect(code).toMatch(/AbortController/);
@@ -120,7 +142,8 @@ describe('forbidden capabilities are absent from the source', () => {
     ['shell execution', /child_process|execSync|spawnSync/],
     ['filesystem writes', /writeFileSync|unlinkSync|rmSync/],
     ['environment secrets', /process\.env|import\.meta\.env/],
-    ['browser storage', /localStorage|sessionStorage|indexedDB/],
+    ['sessionStorage', /sessionStorage/],
+    ['indexedDB', /indexedDB/],
   ];
 
   for (const [label, pattern] of FORBIDDEN) {

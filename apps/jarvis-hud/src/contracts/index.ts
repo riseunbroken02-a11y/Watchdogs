@@ -15,3 +15,4 @@ export * from './telemetry';
 export * from './command';
 export * from './integration';
 export * from './policy';
+export * from './appearance';

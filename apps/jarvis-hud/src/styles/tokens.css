@@ -36,6 +36,11 @@
   /* Core activity intensity, 0..1. Written by useCoreState. */
   --jv-i: 0.32;
 
+  /* Orb theme. Written by useThemeVars from the appearance store. */
+  --jv-state-2: var(--jv-state);
+  --jv-glow: 1;
+  --jv-orb-size: 1;
+
   --jv-pulse: 3.2s;
   --jv-rotate: 18s;
   --jv-transition: 260ms;

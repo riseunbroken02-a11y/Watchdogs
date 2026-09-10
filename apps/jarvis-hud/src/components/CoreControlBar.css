@@ -8,9 +8,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
   flex-wrap: wrap;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: var(--jv-panel);
   border: 1px solid var(--jv-panel-border);
   border-radius: var(--jv-radius);
@@ -20,7 +20,7 @@
 .jv-core-control__group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   min-width: 0;
 }
 
@@ -113,4 +113,59 @@
 
 @media (max-width: 1100px) {
   .jv-rail__btn::after { display: none; }
+}
+
+/* ---- studio toggle ------------------------------------------------------ */
+
+.jv-studio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  border-radius: 100px;
+  white-space: nowrap;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-studio-toggle:hover {
+  color: var(--jv-state);
+  border-color: color-mix(in srgb, var(--jv-state) 50%, transparent);
+  transform: translateY(-1px);
+}
+.jv-studio-toggle[aria-pressed='true'] {
+  color: var(--jv-state);
+  border-color: var(--jv-state);
+  background: color-mix(in srgb, var(--jv-state) 12%, transparent);
+  box-shadow: 0 0 20px -6px var(--jv-state);
+}
+.jv-studio-toggle:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+/* ---- narrow centre column ------------------------------------------------
+   Below ~1500px the centre column can no longer hold the labels, the rail,
+   six state pills and the studio button on one row — and a wrapped control bar
+   costs the core 37px of height. The text goes first: the icons and the
+   pressed states already carry the meaning, and every control keeps its
+   tooltip and aria-label.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1500px) {
+  .jv-core-control__label { display: none; }
+  .jv-studio-toggle__text { display: none; }
+  .jv-studio-toggle { padding: 6px 8px; gap: 0; }
+  .jv-core-control { gap: 8px; }
+}
+
+/* Narrower still: the shape rail moves into the studio, which lists every
+   shape with a label anyway. The state pills stay — they are the ones you
+   reach for mid-session. */
+@media (max-width: 1330px) {
+  .jv-core-control { gap: 6px; padding: 7px 8px; }
+  .jv-core-control__divider:first-of-type { display: none; }
+  .jv-rail { display: none; }
+  .jv-state-btn { padding: 5px 8px; letter-spacing: 0.1em; }
 }

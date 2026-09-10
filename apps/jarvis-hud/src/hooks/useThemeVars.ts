@@ -1,19 +1,17 @@
 import { useEffect } from 'react';
-import { animation, palette, stateColors } from '../config/jarvis.config';
-import type { CoreState } from '../contracts';
-
-const toRgba = (hex: string, alpha: number): string => {
-  const clean = hex.replace('#', '');
-  const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
-  const int = parseInt(full, 16);
-  return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`;
-};
+import { animation, palette } from '../config/jarvis.config';
+import { gradientShift } from '../config/orb.config';
+import type { CoreState, OrbTheme } from '../contracts';
+import { shift, toRgba } from '../utils/color';
 
 /**
- * Pushes the values from jarvis.config.ts into CSS custom properties, and keeps
- * `--jv-state` in sync with the current core state so the whole HUD re-tints.
+ * Pushes the palette and the orb theme into CSS custom properties.
+ *
+ * Everything the core draws reads from these variables, so a studio edit is one
+ * property write away from being on screen — no component re-renders, no
+ * re-mount of the shape.
  */
-export function useThemeVars(state: CoreState) {
+export function useThemeVars(state: CoreState, theme: OrbTheme) {
   // Static tokens — applied once.
   useEffect(() => {
     const root = document.documentElement;
@@ -33,8 +31,6 @@ export function useThemeVars(state: CoreState) {
       '--jv-warning': palette.warning,
       '--jv-danger': palette.danger,
       '--jv-violet': palette.violet,
-      '--jv-pulse': `${animation.pulseSeconds}s`,
-      '--jv-rotate': `${animation.rotationSeconds}s`,
       '--jv-transition': `${animation.transitionMs}ms`,
       '--jv-i': '0.32',
     };
@@ -42,12 +38,32 @@ export function useThemeVars(state: CoreState) {
     root.dataset.reducedMotion = String(animation.reducedMotion);
   }, []);
 
-  // State accent — applied on every state change.
+  // Theme + state — the two together decide how the core looks right now.
   useEffect(() => {
     const root = document.documentElement;
-    const color = stateColors[state];
-    root.style.setProperty('--jv-state', color);
-    root.style.setProperty('--jv-state-glow', toRgba(color, 0.3));
+    const style = theme.states[state];
+
+    // Per-state overrides multiply the base, so "make everything slower" and
+    // "make THINKING slower still" compose instead of fighting.
+    const speed = theme.speed * style.tempoScale;
+    const glow = theme.glow * style.glowScale;
+
+    const { hue, lightness } = gradientShift[theme.gradient];
+    const secondary =
+      theme.gradient === 'solid'
+        ? style.color
+        : shift(style.color, hue * theme.gradientDepth, lightness * theme.gradientDepth);
+
+    root.style.setProperty('--jv-state', style.color);
+    root.style.setProperty('--jv-state-2', secondary);
+    root.style.setProperty('--jv-state-glow', toRgba(style.color, 0.3 * Math.min(1.6, glow)));
+    root.style.setProperty('--jv-glow', glow.toFixed(3));
+    root.style.setProperty('--jv-orb-size', theme.size.toFixed(3));
+    root.style.setProperty('--jv-pulse', `${(animation.pulseSeconds * speed).toFixed(2)}s`);
+    root.style.setProperty('--jv-rotate', `${(animation.rotationSeconds * speed).toFixed(2)}s`);
+
     root.dataset.coreState = state;
-  }, [state]);
+    root.dataset.gradient = theme.gradient;
+    root.dataset.motion = theme.motion;
+  }, [state, theme]);
 }

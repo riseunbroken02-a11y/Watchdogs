@@ -1,0 +1,266 @@
+/* ==========================================================================
+   ORB STUDIO
+   A slide-over on the right. The core stays visible on the left while you
+   edit, because every control is meant to be judged by looking at the orb —
+   not by reading a number.
+   ========================================================================== */
+
+.jv-studio {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(360px, 92vw);
+  z-index: 30;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  background: color-mix(in srgb, var(--jv-bg-elevated) 92%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--jv-state) 28%, transparent);
+  box-shadow: -30px 0 80px -40px #000, -1px 0 40px -20px var(--jv-state);
+  backdrop-filter: blur(18px) saturate(120%);
+  animation: jv-studio-in 260ms var(--jv-ease) both;
+}
+
+@keyframes jv-studio-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* ---- header ------------------------------------------------------------ */
+
+.jv-studio__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--jv-panel-border);
+}
+
+.jv-studio__title {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  font-weight: 800;
+  color: var(--jv-text);
+}
+
+.jv-studio__badge {
+  font-family: var(--jv-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  padding: 2px 5px;
+  border-radius: 2px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.jv-studio__badge--saved {
+  color: var(--jv-success);
+  border-color: color-mix(in srgb, var(--jv-success) 40%, transparent);
+}
+.jv-studio__badge--unsaved {
+  color: var(--jv-warning);
+  border-color: color-mix(in srgb, var(--jv-warning) 45%, transparent);
+  border-style: dashed;
+}
+
+.jv-studio__close {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--jv-radius);
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-studio__close:hover { color: var(--jv-state); border-color: rgba(56, 189, 248, 0.25); }
+.jv-studio__close:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 1px; }
+
+/* ---- presets strip ------------------------------------------------------ */
+
+.jv-studio__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--jv-panel-border);
+}
+
+.jv-preset {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  border-radius: 100px;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-preset:hover {
+  color: var(--jv-text);
+  border-color: color-mix(in srgb, var(--jv-state) 45%, transparent);
+  transform: translateY(-1px);
+}
+.jv-preset:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+.jv-preset__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--jv-preset);
+  box-shadow: 0 0 7px var(--jv-preset);
+}
+
+/* ---- scrolling body ----------------------------------------------------- */
+
+.jv-studio__body {
+  overflow-y: auto;
+  padding: 12px 14px 16px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-height: 0;
+}
+
+.jv-studio__section { display: grid; gap: 9px; }
+
+.jv-studio__legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+.jv-studio__legend::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--jv-panel-border), transparent);
+}
+.jv-studio__legend-text {
+  font-size: 8.5px;
+  letter-spacing: 0.26em;
+  font-weight: 800;
+  color: var(--jv-state);
+  white-space: nowrap;
+  transition: color var(--jv-transition) var(--jv-ease);
+}
+
+.jv-studio__grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* shape rail inside the studio */
+.jv-studio__shapes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+
+.jv-studio__shape {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  color: var(--jv-text-dim);
+  background: rgba(56, 189, 248, 0.03);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: var(--jv-radius);
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-studio__shape:hover {
+  color: var(--jv-state);
+  border-color: color-mix(in srgb, var(--jv-state) 45%, transparent);
+  transform: translateY(-1px);
+}
+.jv-studio__shape[aria-pressed='true'] {
+  color: var(--jv-state);
+  border-color: var(--jv-state);
+  background: color-mix(in srgb, var(--jv-state) 14%, transparent);
+  box-shadow: 0 0 18px -6px var(--jv-state);
+}
+.jv-studio__shape:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+.jv-studio__shape .jv-shape-btn__glyph { width: 17px; height: 17px; }
+
+/* ---- state editor ------------------------------------------------------- */
+
+.jv-studio__states {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.jv-state-tab {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 6px 3px;
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+  background: rgba(56, 189, 248, 0.03);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: var(--jv-radius);
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-state-tab:hover { color: var(--jv-text); border-color: color-mix(in srgb, var(--jv-tone) 45%, transparent); }
+.jv-state-tab[aria-pressed='true'] {
+  color: var(--jv-tone);
+  border-color: var(--jv-tone);
+  background: color-mix(in srgb, var(--jv-tone) 12%, transparent);
+}
+.jv-state-tab:focus-visible { outline: 1px solid var(--jv-tone); outline-offset: 2px; }
+
+.jv-state-tab__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--jv-tone);
+  box-shadow: 0 0 8px var(--jv-tone);
+}
+
+.jv-studio__preview-note {
+  font-size: 8.5px;
+  line-height: 1.45;
+  color: var(--jv-text-faint);
+}
+
+/* ---- footer ------------------------------------------------------------- */
+
+.jv-studio__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--jv-panel-border);
+}
+
+.jv-studio__note {
+  font-size: 8px;
+  line-height: 1.4;
+  color: var(--jv-text-faint);
+  margin-right: auto;
+}
+
+.jv-studio__btn {
+  padding: 7px 12px;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: var(--jv-radius);
+  white-space: nowrap;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-studio__btn:hover { color: var(--jv-state); border-color: color-mix(in srgb, var(--jv-state) 50%, transparent); }
+.jv-studio__btn--danger:hover { color: var(--jv-danger); border-color: color-mix(in srgb, var(--jv-danger) 50%, transparent); }
+.jv-studio__btn:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+/* The HUD keeps its full width; the studio floats above the right column. */
+@media (max-width: 1200px) {
+  .jv-studio { width: min(340px, 96vw); }
+}
