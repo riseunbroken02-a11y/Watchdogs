@@ -98,10 +98,10 @@ instantly.
 
 | Section | Controls |
 | --- | --- |
-| **FORM** | all eight shapes, plus a size scale (60–130%) |
+| **FORM** | all eight shapes, a size scale (60–130%) and an opacity slider (15–100%). Opacity floors well above zero: an orb you cannot see is a trap, not a look |
 | **GRADIENT** | an on/off switch, four blend styles (`RADIAL` · `LINEAR` · `CONIC` · `DUAL`), a depth slider for how strongly the secondary shows, and a glow multiplier (0–2×). With the gradient off the core is drawn in the primary alone, and the style and depth controls grey out |
 | **MOTION** | `SMOOTH` · `PULSE` · `ORBIT` · `STATIC`, plus a speed multiplier. Each style changes the balance between breathing and turning; `STATIC` holds the core completely still |
-| **STATES** | pick any of the six states to edit — the core previews it while you do — then set **both** its colours, its tempo and its glow. `PRIMARY` drives the whole HUD's tint; `SECONDARY` is the gradient's second stop. Pick either slot and the hex field and swatches follow it. Per-state values multiply the base, so "slower overall" and "slower still when thinking" compose |
+| **STATES** | pick any of the six states to edit — the core previews it while you do — then set **both** its colours, its tempo, its glow and its opacity. `PRIMARY` drives the whole HUD's tint; `SECONDARY` is the gradient's second stop. Pick either slot and the hex field and swatches follow it. Per-state values multiply the base, so "slower overall" and "slower still when thinking" compose — and the opacity product is clamped so a state multiplier can never push the core past solid or make it vanish |
 | **LIBRARY** | save the current look under your own name, load it back, duplicate it or delete it. Deleting asks for a second click rather than opening a dialog |
 
 Six built-in presets — **JARVIS**, **ARC**, **CRIMSON**, **EMERALD**, **VOID**,
@@ -132,9 +132,10 @@ from any other JSON and refuse the second with a useful message rather than
 silently producing a default. Imported presets are **merged**, never replacing
 the library you built up.
 
-A file written by the previous schema is **upgraded rather than rejected**: its
-derived second colour is worked out and stored explicitly, so it looks the same
-and is now editable. The result says so.
+A file written by an older schema is **upgraded rather than rejected**, one
+version at a time: version 1's derived second colour is worked out and stored
+explicitly, and version 2 gains opacity at full strength. Either way it looks
+identical afterwards, and the result says which upgrade ran.
 
 An import is never silently lossy. A value outside its range is clamped, an
 unknown shape or gradient is ignored, and **everything that did not survive is
@@ -282,7 +283,7 @@ apps/jarvis-hud/src/
 │                  integrations.config.ts (flags + action policy) ·
 │                  orb.config.ts (theme defaults, ranges, presets)
 ├── utils/         small shared helpers
-└── __tests__/     21 suites, 263 tests
+└── __tests__/     22 suites, 281 tests
 ```
 
 Dependencies point inward only: UI → kernel → contracts, adapters → contracts.

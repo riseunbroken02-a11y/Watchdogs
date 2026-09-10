@@ -40,15 +40,13 @@ const clamp = (value: number, { min, max }: { min: number; max: number }, fallba
   Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 
 /**
+ * Version 1 → 2.
+ *
  * Version 1 had no secondary colour: it derived one from a gradient style and a
  * depth. Rather than discard such a save, we compute the colour it *was*
  * showing and store that explicitly, so an upgrade looks like nothing happened.
  */
-export function migrateTheme(raw: unknown): unknown {
-  if (!raw || typeof raw !== 'object') return raw;
-  const input = raw as Record<string, unknown>;
-  if (input.version !== 1) return raw;
-
+function migrateV1toV2(input: Record<string, unknown>): Record<string, unknown> {
   const legacyStyle = typeof input.gradient === 'string' ? input.gradient : 'radial';
   const depth = typeof input.gradientDepth === 'number' ? input.gradientDepth : 0.55;
   const move = legacyGradientShift[legacyStyle] ?? legacyGradientShift.radial;
@@ -73,11 +71,41 @@ export function migrateTheme(raw: unknown): unknown {
 
   return {
     ...input,
-    version: THEME_VERSION,
+    version: 2,
     gradientEnabled: legacyStyle !== 'solid',
     gradient: legacyGradientStyle[legacyStyle] ?? 'radial',
     states,
   };
+}
+
+/**
+ * Version 2 → 3.
+ *
+ * Version 3 adds opacity. A version 2 orb was always fully solid, so the
+ * upgrade is a pair of neutral defaults and nothing visibly changes.
+ */
+function migrateV2toV3(input: Record<string, unknown>): Record<string, unknown> {
+  const incoming = (input.states ?? {}) as Record<string, Record<string, unknown>>;
+  const states: Record<string, unknown> = {};
+  for (const state of STATES) {
+    states[state] = { ...(incoming[state] ?? {}), opacityScale: 1 };
+  }
+  return { ...input, version: 3, opacity: 1, states };
+}
+
+/**
+ * Walks a saved theme forward one version at a time, so a file written by any
+ * schema we have shipped still opens. A version we do not know is returned
+ * untouched and rejected later by `normaliseTheme`.
+ */
+export function migrateTheme(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object') return raw;
+  let current = raw as Record<string, unknown>;
+
+  if (current.version === 1) current = migrateV1toV2(current);
+  if (current.version === 2) current = migrateV2toV3(current);
+
+  return current;
 }
 
 /**
@@ -103,6 +131,9 @@ export function normaliseTheme(raw: unknown, base: OrbTheme = cloneDefaultTheme(
   if (typeof input.shape === 'string' && shapeIds.includes(input.shape)) base.shape = input.shape;
   if (typeof input.size === 'number') base.size = clamp(input.size, ranges.size, base.size);
   if (typeof input.glow === 'number') base.glow = clamp(input.glow, ranges.glow, base.glow);
+  if (typeof input.opacity === 'number') {
+    base.opacity = clamp(input.opacity, ranges.opacity, base.opacity);
+  }
   if (typeof input.speed === 'number') base.speed = clamp(input.speed, ranges.speed, base.speed);
   if (typeof input.gradientDepth === 'number') {
     base.gradientDepth = clamp(input.gradientDepth, ranges.gradientDepth, base.gradientDepth);
@@ -131,6 +162,9 @@ export function normaliseTheme(raw: unknown, base: OrbTheme = cloneDefaultTheme(
       }
       if (typeof incoming.glowScale === 'number') {
         target.glowScale = clamp(incoming.glowScale, ranges.glowScale, target.glowScale);
+      }
+      if (typeof incoming.opacityScale === 'number') {
+        target.opacityScale = clamp(incoming.opacityScale, ranges.opacityScale, target.opacityScale);
       }
     }
   }

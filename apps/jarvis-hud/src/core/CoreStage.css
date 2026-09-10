@@ -24,16 +24,22 @@
   place-items: center;
 }
 
-/* Fade/scale the shape in whenever the selection changes. */
+/* Fade/scale the shape in whenever the selection changes.
+
+   The entrance animation runs with fill-mode `both`, so its final keyframe
+   keeps applying afterwards — which means the theme's opacity has to be the
+   value it lands on, or it would be overridden the moment a shape mounts. */
 .jv-stage__shape {
   position: absolute;
   inset: 0;
+  opacity: var(--jv-orb-opacity);
   animation: jv-stage-in 480ms var(--jv-ease) both;
+  transition: opacity var(--jv-transition) var(--jv-ease);
 }
 
 @keyframes jv-stage-in {
   from { opacity: 0; transform: scale(0.9); filter: blur(6px); }
-  to   { opacity: 1; transform: scale(1); filter: blur(0); }
+  to   { opacity: var(--jv-orb-opacity); transform: scale(1); filter: blur(0); }
 }
 
 /* Corner brackets around the stage */

@@ -33,6 +33,8 @@ export interface OrbStateStyle {
   tempoScale: number;
   /** Multiplier on the base glow. */
   glowScale: number;
+  /** Multiplier on the base opacity. The product is clamped to 1. */
+  opacityScale: number;
 }
 
 export interface OrbTheme {
@@ -43,6 +45,8 @@ export interface OrbTheme {
   size: number;
   /** Glow strength multiplier. */
   glow: number;
+  /** How solid the core is drawn, 0..1. */
+  opacity: number;
   /** Animation duration multiplier. Lower is faster. */
   speed: number;
   /** Master switch. Off means the core is drawn in the primary colour alone. */

@@ -217,15 +217,26 @@ export const OrbStudio = memo(function OrbStudio({
                 </button>
               ))}
           </div>
-          <Slider
-            label={ranges.size.label}
-            value={theme.size}
-            min={ranges.size.min}
-            max={ranges.size.max}
-            step={ranges.size.step}
-            format={percent}
-            onChange={(size) => store.patch({ size })}
-          />
+          <div className="jv-studio__grid2">
+            <Slider
+              label={ranges.size.label}
+              value={theme.size}
+              min={ranges.size.min}
+              max={ranges.size.max}
+              step={ranges.size.step}
+              format={percent}
+              onChange={(size) => store.patch({ size })}
+            />
+            <Slider
+              label={ranges.opacity.label}
+              value={theme.opacity}
+              min={ranges.opacity.min}
+              max={ranges.opacity.max}
+              step={ranges.opacity.step}
+              format={percent}
+              onChange={(opacity) => store.patch({ opacity })}
+            />
+          </div>
         </section>
 
         {/* -------------------------------------------------------- colour */}
@@ -379,6 +390,15 @@ export const OrbStudio = memo(function OrbStudio({
               onChange={(glowScale) => store.patchState(editing, { glowScale })}
             />
           </div>
+          <Slider
+            label={ranges.opacityScale.label}
+            value={style.opacityScale}
+            min={ranges.opacityScale.min}
+            max={ranges.opacityScale.max}
+            step={ranges.opacityScale.step}
+            format={times}
+            onChange={(opacityScale) => store.patchState(editing, { opacityScale })}
+          />
 
           <button
             type="button"

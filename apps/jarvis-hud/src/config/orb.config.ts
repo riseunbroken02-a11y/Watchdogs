@@ -19,16 +19,19 @@ import type {
 } from '../contracts';
 
 /** Bumped when OrbTheme's shape changes; older saves are then discarded. */
-export const THEME_VERSION = 2;
+export const THEME_VERSION = 3;
 
 /** Every numeric control, with the range the store clamps to. */
 export const ranges = {
   size: { min: 0.6, max: 1.3, step: 0.01, label: 'SIZE' },
   glow: { min: 0, max: 2, step: 0.05, label: 'GLOW' },
+  // Floored well above zero: an invisible orb is a trap, not a look.
+  opacity: { min: 0.15, max: 1, step: 0.01, label: 'OPACITY' },
   speed: { min: 0.35, max: 2.2, step: 0.05, label: 'SPEED' },
   gradientDepth: { min: 0, max: 1, step: 0.02, label: 'DEPTH' },
   tempoScale: { min: 0.2, max: 2, step: 0.05, label: 'TEMPO' },
   glowScale: { min: 0, max: 2, step: 0.05, label: 'GLOW' },
+  opacityScale: { min: 0.15, max: 1.5, step: 0.05, label: 'OPACITY' },
 } as const;
 
 export const gradientStyles: { id: GradientStyle; label: string; hint: string }[] = [
@@ -71,12 +74,12 @@ export const legacyGradientStyle: Record<string, GradientStyle> = {
  * still looks identical.
  */
 const defaultStates: Record<CoreState, OrbStateStyle> = {
-  idle: { color: '#22d3ee', color2: '#70e3f4', tempoScale: 1, glowScale: 1 },
-  listening: { color: '#38bdf8', color2: '#8ed6fb', tempoScale: 0.7, glowScale: 1.1 },
-  thinking: { color: '#a78bfa', color2: '#cdbcfc', tempoScale: 0.45, glowScale: 1.25 },
-  working: { color: '#fbbf24', color2: '#fddb8b', tempoScale: 0.35, glowScale: 1.4 },
-  success: { color: '#34d399', color2: '#84e6bf', tempoScale: 0.8, glowScale: 1.2 },
-  error: { color: '#f87171', color2: '#fbb0b0', tempoScale: 0.25, glowScale: 1.5 },
+  idle: { color: '#22d3ee', color2: '#70e3f4', tempoScale: 1, glowScale: 1, opacityScale: 1 },
+  listening: { color: '#38bdf8', color2: '#8ed6fb', tempoScale: 0.7, glowScale: 1.1, opacityScale: 1 },
+  thinking: { color: '#a78bfa', color2: '#cdbcfc', tempoScale: 0.45, glowScale: 1.25, opacityScale: 1 },
+  working: { color: '#fbbf24', color2: '#fddb8b', tempoScale: 0.35, glowScale: 1.4, opacityScale: 1 },
+  success: { color: '#34d399', color2: '#84e6bf', tempoScale: 0.8, glowScale: 1.2, opacityScale: 1 },
+  error: { color: '#f87171', color2: '#fbb0b0', tempoScale: 0.25, glowScale: 1.5, opacityScale: 1 },
 };
 
 export const defaultTheme: OrbTheme = {
@@ -84,6 +87,7 @@ export const defaultTheme: OrbTheme = {
   shape: 'reactor',
   size: 1,
   glow: 1,
+  opacity: 1,
   speed: 1,
   gradientEnabled: true,
   gradient: 'radial',
@@ -113,6 +117,7 @@ export const presets: OrbPreset[] = [
     theme: {
       shape: 'reactor',
       glow: 1,
+      opacity: 1,
       speed: 1,
       gradientEnabled: true,
       gradient: 'radial',
@@ -134,6 +139,7 @@ export const presets: OrbPreset[] = [
     theme: {
       shape: 'orb',
       glow: 1.5,
+      opacity: 1,
       speed: 1.2,
       gradientEnabled: true,
       gradient: 'radial',
@@ -197,6 +203,8 @@ export const presets: OrbPreset[] = [
     theme: {
       shape: 'hologram',
       glow: 1.6,
+      // A hologram should read as projected light, not solid matter.
+      opacity: 0.72,
       speed: 0.7,
       gradientEnabled: true,
       gradient: 'conic',
@@ -218,6 +226,7 @@ export const presets: OrbPreset[] = [
     theme: {
       shape: 'minimal',
       glow: 0.6,
+      opacity: 0.85,
       speed: 1.5,
       // The one preset that deliberately ships with the gradient off.
       gradientEnabled: false,

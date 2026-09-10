@@ -167,6 +167,7 @@ describe('forbidden capabilities are absent from the source', () => {
       'gradientEnabled',
       'glow',
       'motion',
+      'opacity',
       'shape',
       'size',
       'speed',

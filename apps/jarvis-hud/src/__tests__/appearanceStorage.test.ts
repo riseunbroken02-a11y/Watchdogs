@@ -120,6 +120,7 @@ describe('local appearance storage — the one storage chokepoint', () => {
       'gradientEnabled',
       'glow',
       'motion',
+      'opacity',
       'shape',
       'size',
       'speed',

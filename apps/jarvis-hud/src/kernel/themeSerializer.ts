@@ -29,6 +29,7 @@ const THEME_KEYS = new Set([
   'shape',
   'size',
   'glow',
+  'opacity',
   'speed',
   'gradientEnabled',
   'gradient',
@@ -37,7 +38,7 @@ const THEME_KEYS = new Set([
   'states',
 ]);
 
-const STATE_KEYS = new Set(['color', 'color2', 'tempoScale', 'glowScale']);
+const STATE_KEYS = new Set(['color', 'color2', 'tempoScale', 'glowScale', 'opacityScale']);
 
 /** Filename for a downloaded theme, dated so several exports do not collide. */
 export function themeFilename(now = new Date()): string {
@@ -95,6 +96,7 @@ function describeRepairs(raw: unknown, applied: OrbTheme): string[] {
   const numeric: [keyof typeof ranges, number][] = [
     ['size', applied.size],
     ['glow', applied.glow],
+    ['opacity', applied.opacity],
     ['speed', applied.speed],
     ['gradientDepth', applied.gradientDepth],
   ];
@@ -131,7 +133,7 @@ function describeRepairs(raw: unknown, applied: OrbTheme): string[] {
       if (typeof style.color === 'string' && !isHexColor(style.color)) {
         warnings.push(`${state}: "${style.color}" is not a hex colour — kept ${applied.states[state].color}`);
       }
-      for (const key of ['tempoScale', 'glowScale'] as const) {
+      for (const key of ['tempoScale', 'glowScale', 'opacityScale'] as const) {
         const value = style[key];
         const result = applied.states[state][key as keyof OrbStateStyle];
         if (typeof value === 'number' && Number.isFinite(value) && value !== result) {
@@ -182,7 +184,7 @@ export function importTheme(json: string): ThemeImportResult {
 
   // Version lives on the theme; the envelope carries a copy for readability.
   const version = (candidate as Partial<OrbTheme>).version ?? envelope.version;
-  const upgraded = version === 1;
+  const upgraded = version === 1 || version === 2;
   if (version !== THEME_VERSION && !upgraded) {
     return fail(
       `That theme is version ${String(version ?? 'unknown')}; this HUD reads version ${THEME_VERSION}.`,
@@ -194,7 +196,11 @@ export function importTheme(json: string): ThemeImportResult {
   const applied = normaliseTheme(candidate);
   const warnings = upgraded ? [] : describeRepairs(candidate, applied);
   if (upgraded) {
-    warnings.push(`Upgraded from version 1 — its derived second colour is now editable.`);
+    warnings.push(
+      version === 1
+        ? 'Upgraded from version 1 — its derived second colour is now editable.'
+        : 'Upgraded from version 2 — opacity was added at full strength.',
+    );
   }
 
   const presets = normalisePresets(envelope.presets);

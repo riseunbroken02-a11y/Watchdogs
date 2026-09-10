@@ -46,6 +46,9 @@ export function useThemeVars(state: CoreState, theme: OrbTheme) {
     // "make THINKING slower still" compose instead of fighting.
     const speed = theme.speed * style.tempoScale;
     const glow = theme.glow * style.glowScale;
+    // Clamped at both ends: a state multiplier must not push the core past
+    // solid, nor make it disappear entirely.
+    const opacity = Math.min(1, Math.max(0.05, theme.opacity * style.opacityScale));
 
     // Depth decides how much of the secondary actually shows. With the
     // gradient off, the second stop simply is the primary, which is what makes
@@ -60,6 +63,7 @@ export function useThemeVars(state: CoreState, theme: OrbTheme) {
     );
     root.style.setProperty('--jv-state-glow', toRgba(style.color, 0.3 * Math.min(1.6, glow)));
     root.style.setProperty('--jv-glow', glow.toFixed(3));
+    root.style.setProperty('--jv-orb-opacity', opacity.toFixed(3));
     root.style.setProperty('--jv-orb-size', theme.size.toFixed(3));
     root.style.setProperty('--jv-pulse', `${(animation.pulseSeconds * speed).toFixed(2)}s`);
     root.style.setProperty('--jv-rotate', `${(animation.rotationSeconds * speed).toFixed(2)}s`);

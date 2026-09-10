@@ -82,9 +82,11 @@ save from an older schema version rather than half-applying it.
 
 `src/kernel/themeSchema.ts` holds that validation on its own, so the store and
 the serialiser can both depend on it without depending on each other. It also
-owns the **migration**: a theme saved by an older schema is upgraded rather than
-discarded — version 1 had no secondary colour, so the colour it *was* deriving
-is computed and stored explicitly, and the upgrade is invisible.
+owns the **migration**, which walks a save forward one version at a time so a
+file written by any schema the HUD has shipped still opens: version 1 had no
+secondary colour, so the colour it *was* deriving is computed and stored
+explicitly; version 2 had no opacity, so it gains one at full strength. Each
+step is invisible by design — an upgraded theme looks exactly as it did.
 
 `normaliseTheme(raw, base)` takes what a rejected value falls back *to*. Loading
 from storage falls back to the shipped default; an in-place edit falls back to
@@ -375,6 +377,7 @@ seconds that make it readable on screen.
 | `themeSerializer.test.ts` | export envelope, round-trip of every preset, refusals, reported repairs |
 | `themeMigration.test.ts` | version 1 → 2 upgrade, legacy gradient mapping, unmigratable versions |
 | `presetLibrary.test.ts` | save, load, duplicate, delete, the cap, and repair of a tampered library |
+| `opacity.test.ts` | base and per-state opacity, clamping, presets, transfer |
 | `gradientToggle.test.ts` | primary/secondary independence, the on/off switch, blend styles |
 | `themeTransfer.test.ts` | clipboard fallback, object-URL release, unreadable file |
 | `color.test.ts` | hex ⇄ HSL round-trip and the gradient derivations |

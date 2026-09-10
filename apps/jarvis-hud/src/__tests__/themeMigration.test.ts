@@ -30,9 +30,67 @@ const v1 = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-describe('version 1 → 2 migration', () => {
-  it('upgrades the version', () => {
+describe('version 2 → 3 migration', () => {
+  /** A version 2 theme: everything current, minus the opacity fields. */
+  const v2 = () => {
+    const current = cloneDefaultTheme();
+    const states = Object.fromEntries(
+      Object.entries(current.states).map(([key, style]) => {
+        const { opacityScale: _dropped, ...rest } = style;
+        return [key, rest];
+      }),
+    );
+    const { opacity: _also, ...rest } = current;
+    return { ...rest, version: 2, states };
+  };
+
+  it('adds opacity at full strength, so nothing visibly changes', () => {
+    const theme = normaliseTheme(v2());
+
+    expect(theme.opacity).toBe(1);
+    for (const style of Object.values(theme.states)) {
+      expect(style.opacityScale).toBe(1);
+    }
+  });
+
+  it('keeps everything version 2 could express', () => {
+    const theme = normaliseTheme({ ...v2(), shape: 'hexagon', gradientEnabled: false });
+
+    expect(theme.shape).toBe('hexagon');
+    expect(theme.gradientEnabled).toBe(false);
+    expect(theme.states.thinking.color2).toBe(cloneDefaultTheme().states.thinking.color2);
+  });
+
+  it('imports a version 2 export and says it was upgraded', () => {
+    const result = importTheme(
+      JSON.stringify({
+        app: 'jarvis-hud',
+        kind: 'orb-theme',
+        version: 2,
+        exportedAt: '2026-01-01T00:00:00.000Z',
+        theme: { ...v2(), shape: 'wave' },
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.theme?.shape).toBe('wave');
+    expect(result.warnings.join(' ')).toMatch(/Upgraded from version 2 — opacity was added/);
+  });
+});
+
+describe('version 1 → 3 migration, chained', () => {
+  it('walks a version 1 save all the way to the current schema', () => {
     expect((migrateTheme(v1()) as { version: number }).version).toBe(THEME_VERSION);
+  });
+
+  it('picks up what each step along the way added', () => {
+    const theme = normaliseTheme(v1());
+    // From the 1 → 2 step:
+    expect(theme.states.idle.color2).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(typeof theme.gradientEnabled).toBe('boolean');
+    // ...and from the 2 → 3 step:
+    expect(theme.opacity).toBe(1);
+    expect(theme.states.idle.opacityScale).toBe(1);
   });
 
   it('keeps everything version 1 could express', () => {
