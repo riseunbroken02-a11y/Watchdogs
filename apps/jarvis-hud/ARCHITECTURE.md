@@ -81,7 +81,15 @@ unrenderable state. `normaliseTheme()` repairs field by field and discards a
 save from an older schema version rather than half-applying it.
 
 `src/kernel/themeSchema.ts` holds that validation on its own, so the store and
-the serialiser can both depend on it without depending on each other.
+the serialiser can both depend on it without depending on each other. It also
+owns the **migration**: a theme saved by an older schema is upgraded rather than
+discarded — version 1 had no secondary colour, so the colour it *was* deriving
+is computed and stored explicitly, and the upgrade is invisible.
+
+`normaliseTheme(raw, base)` takes what a rejected value falls back *to*. Loading
+from storage falls back to the shipped default; an in-place edit falls back to
+the theme the operator already had, so a bad hex never silently resets a field
+to factory.
 
 `src/kernel/themeSerializer.ts` turns a theme into a portable file and back.
 Export wraps it in an envelope (`app`, `kind`, `version`, `exportedAt`) so an
@@ -365,6 +373,9 @@ seconds that make it readable on screen.
 | `appearanceStore.test.ts` | theme editing, clamping, presets, reset, repair of corrupt saves |
 | `appearanceStorage.test.ts` | round-trip, quota failure, blocked storage, what is stored |
 | `themeSerializer.test.ts` | export envelope, round-trip of every preset, refusals, reported repairs |
+| `themeMigration.test.ts` | version 1 → 2 upgrade, legacy gradient mapping, unmigratable versions |
+| `presetLibrary.test.ts` | save, load, duplicate, delete, the cap, and repair of a tampered library |
+| `gradientToggle.test.ts` | primary/secondary independence, the on/off switch, blend styles |
 | `themeTransfer.test.ts` | clipboard fallback, object-URL release, unreadable file |
 | `color.test.ts` | hex ⇄ HSL round-trip and the gradient derivations |
 | `safety.test.ts` | mock mode on, and a source scan for forbidden capabilities |

@@ -99,13 +99,19 @@ instantly.
 | Section | Controls |
 | --- | --- |
 | **FORM** | all eight shapes, plus a size scale (60–130%) |
-| **GRADIENT** | `SOLID` · `RADIAL` · `DUAL` · `AURORA`, a depth slider for how far the second stop departs from the accent, and a glow multiplier (0–2×) |
+| **GRADIENT** | an on/off switch, four blend styles (`RADIAL` · `LINEAR` · `CONIC` · `DUAL`), a depth slider for how strongly the secondary shows, and a glow multiplier (0–2×). With the gradient off the core is drawn in the primary alone, and the style and depth controls grey out |
 | **MOTION** | `SMOOTH` · `PULSE` · `ORBIT` · `STATIC`, plus a speed multiplier. Each style changes the balance between breathing and turning; `STATIC` holds the core completely still |
-| **STATES** | pick any of the six states to edit — the core previews it while you do — then set its colour (picker, hex field or swatch), its tempo and its glow. Per-state values multiply the base, so "slower overall" and "slower still when thinking" compose |
+| **STATES** | pick any of the six states to edit — the core previews it while you do — then set **both** its colours, its tempo and its glow. `PRIMARY` drives the whole HUD's tint; `SECONDARY` is the gradient's second stop. Pick either slot and the hex field and swatches follow it. Per-state values multiply the base, so "slower overall" and "slower still when thinking" compose |
+| **LIBRARY** | save the current look under your own name, load it back, duplicate it or delete it. Deleting asks for a second click rather than opening a dialog |
 
-Six presets — **JARVIS**, **ARC**, **CRIMSON**, **EMERALD**, **VOID**, **MONO** —
-set shape, motion, gradient and all six colours in one click. A preset leaves
-anything it does not mention alone, so your size stays put.
+Six built-in presets — **JARVIS**, **ARC**, **CRIMSON**, **EMERALD**, **VOID**,
+**MONO** — set shape, motion, gradient and all twelve colours in one click. A
+preset leaves anything it does not mention alone, so your size stays put. MONO
+is the one that ships with the gradient switched off.
+
+Your own presets live in the **LIBRARY** section, capped at 40 so storage cannot
+grow unbounded. Each row shows a three-colour fingerprint, so you can pick one
+out without loading it.
 
 `RESET <STATE>` restores one state; `RESET ALL` returns to the shipped default,
 which reproduces the phase 1–4 look exactly.
@@ -120,9 +126,15 @@ and out as JSON:
 | `PASTE JSON` | Opens a box to paste a theme into, then APPLY |
 | `LOAD FILE` | Picks an exported `.json` file |
 
-The file carries an envelope — `app`, `kind`, `version`, `exportedAt` and the
-theme — so an import can tell a Jarvis theme from any other JSON and refuse the
-second with a useful message rather than silently producing a default.
+The file carries an envelope — `app`, `kind`, `version`, `exportedAt`, the theme
+and your saved presets when you have any — so an import can tell a Jarvis theme
+from any other JSON and refuse the second with a useful message rather than
+silently producing a default. Imported presets are **merged**, never replacing
+the library you built up.
+
+A file written by the previous schema is **upgraded rather than rejected**: its
+derived second colour is worked out and stored explicitly, so it looks the same
+and is now editable. The result says so.
 
 An import is never silently lossy. A value outside its range is clamped, an
 unknown shape or gradient is ignored, and **everything that did not survive is
@@ -140,8 +152,9 @@ different schema version — is refused outright and **the live theme is left
 exactly as it was**. A bare theme (what sits in browser storage) is accepted
 too, so copying that out and pasting it back works.
 
-**Persistence.** The theme is saved in this browser under a single key,
-`jarvis.hud.orb.theme`. It holds appearance only — no identifiers, no history,
+**Persistence.** The theme and your saved presets live in this browser under
+two keys, `jarvis.hud.orb.theme` and `jarvis.hud.orb.presets`. They hold
+appearance only — no identifiers, no history,
 no credentials. When a browser refuses durable storage (a private window, a full
 quota, storage disabled by policy) the HUD keeps working and the studio badge
 reads `SESSION ONLY` instead of `SAVED`, so a lost theme is never a surprise. A
@@ -269,7 +282,7 @@ apps/jarvis-hud/src/
 │                  integrations.config.ts (flags + action policy) ·
 │                  orb.config.ts (theme defaults, ranges, presets)
 ├── utils/         small shared helpers
-└── __tests__/     18 suites, 217 tests
+└── __tests__/     21 suites, 263 tests
 ```
 
 Dependencies point inward only: UI → kernel → contracts, adapters → contracts.

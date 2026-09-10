@@ -375,3 +375,108 @@
 :root[data-motion='static'] .jv-shape *::after {
   animation: none !important;
 }
+
+/* ==================================================  GRADIENT STYLES  =====
+   `--jv-state-2` already carries the blended second stop, so a shape does not
+   need to know whether the gradient is on. These rules only decide WHERE the
+   two stops land on the shapes that have a fill to blend.
+
+   With the gradient off, --jv-state-2 equals --jv-state and every one of these
+   collapses to a flat accent on its own.
+   ========================================================================== */
+
+/* ---- ORB --------------------------------------------------------------- */
+
+:root[data-gradient='linear'] .jv-orb {
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+    linear-gradient(180deg, var(--jv-state-2), color-mix(in srgb, var(--jv-state) 70%, #000)),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 55%, #000) 30%, #030913 78%);
+}
+
+:root[data-gradient='conic'] .jv-orb {
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.45), transparent 30%),
+    conic-gradient(
+      from 210deg at 50% 50%,
+      var(--jv-state),
+      var(--jv-state-2),
+      var(--jv-state)
+    ),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 55%, #000) 30%, #030913 78%);
+}
+
+:root[data-gradient='dual'] .jv-orb {
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+    linear-gradient(125deg, var(--jv-state) 0 48%, var(--jv-state-2) 52% 100%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--jv-state) 55%, #000) 30%, #030913 78%);
+}
+
+/* ---- HOLOGRAM ---------------------------------------------------------- */
+
+:root[data-gradient='linear'] .jv-holo__body {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--jv-state-2) 34%, transparent),
+    color-mix(in srgb, var(--jv-state) 6%, transparent) 70%,
+    transparent
+  );
+}
+
+:root[data-gradient='conic'] .jv-holo__body {
+  background: conic-gradient(
+    from 180deg at 50% 40%,
+    color-mix(in srgb, var(--jv-state) 22%, transparent),
+    color-mix(in srgb, var(--jv-state-2) 34%, transparent),
+    color-mix(in srgb, var(--jv-state) 22%, transparent)
+  );
+}
+
+:root[data-gradient='dual'] .jv-holo__body {
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--jv-state) 30%, transparent) 0 50%,
+    color-mix(in srgb, var(--jv-state-2) 30%, transparent) 50% 100%
+  );
+}
+
+/* ---- MINIMAL ----------------------------------------------------------- */
+
+:root[data-gradient='linear'] .jv-minimal {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--jv-state-2) 34%, transparent),
+    transparent 75%
+  );
+}
+
+:root[data-gradient='conic'] .jv-minimal {
+  background: conic-gradient(
+    from 140deg at 50% 50%,
+    color-mix(in srgb, var(--jv-state) 12%, transparent),
+    color-mix(in srgb, var(--jv-state-2) 38%, transparent),
+    color-mix(in srgb, var(--jv-state) 12%, transparent)
+  );
+}
+
+:root[data-gradient='dual'] .jv-minimal {
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--jv-state) 26%, transparent) 0 50%,
+    color-mix(in srgb, var(--jv-state-2) 34%, transparent) 50% 100%
+  );
+}
+
+/* ---- REACTOR / RING / HEXAGON -------------------------------------------
+   Line art rather than fills, so the second stop reads best on the core mass
+   and the accent arcs. */
+
+:root[data-gradient='dual'] .jv-reactor__segment,
+:root[data-gradient='conic'] .jv-reactor__segment { stroke: var(--jv-state-2); }
+
+:root[data-gradient='dual'] .jv-ring__arc,
+:root[data-gradient='conic'] .jv-ring__arc { stroke: var(--jv-state-2); }
+
+:root[data-gradient='dual'] .jv-hex__outline,
+:root[data-gradient='conic'] .jv-hex__outline { stroke: var(--jv-state-2); }

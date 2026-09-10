@@ -5,8 +5,8 @@
  * makes the scan in `src/__tests__/safety.test.ts` meaningful: `localStorage`
  * is permitted in this file and forbidden everywhere else.
  *
- * WHAT IS STORED: the orb theme only — shape, size, glow, speed, gradient,
- * motion and six colours. No command history, no memory records, no telemetry,
+ * WHAT IS STORED: the orb theme and the operator's saved presets — shape, size,
+ * glow, speed, gradient, motion and colours, under two keys. No command history, no memory records, no telemetry,
  * no credential, nothing about the operator. It is a cosmetic preference, and
  * losing it costs nothing.
  *
@@ -15,8 +15,8 @@
  * down over a colour preference.
  */
 
-import { storageKey } from '../../config/orb.config';
-import type { AppearanceStorage, OrbTheme } from '../../contracts';
+import { presetsKey, storageKey } from '../../config/orb.config';
+import type { AppearanceStorage, OrbTheme, SavedPreset } from '../../contracts';
 
 /** True when the browser will actually let us read and write. */
 export function storageAvailable(): boolean {
@@ -54,6 +54,27 @@ export function createLocalAppearanceStorage(): AppearanceStorage {
       } catch {
         // Quota exceeded, private mode, storage blocked — the edit still
         // applies for this session, it just will not survive a reload.
+        return false;
+      }
+    },
+
+    loadPresets() {
+      try {
+        const raw = localStorage.getItem(presetsKey);
+        if (!raw) return [];
+        // The store repairs whatever comes back, so a truncated or hand-edited
+        // library is cleaned rather than trusted.
+        return JSON.parse(raw) as SavedPreset[];
+      } catch {
+        return [];
+      }
+    },
+
+    savePresets(presets) {
+      try {
+        localStorage.setItem(presetsKey, JSON.stringify(presets));
+        return true;
+      } catch {
         return false;
       }
     },

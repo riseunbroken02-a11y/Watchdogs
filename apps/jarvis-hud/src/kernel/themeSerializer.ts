@@ -13,9 +13,16 @@
 
 import { THEME_VERSION, ranges } from '../config/orb.config';
 import { coreShapes } from '../config/jarvis.config';
-import type { CoreState, OrbStateStyle, OrbTheme, ThemeFile, ThemeImportResult } from '../contracts';
+import type {
+  CoreState,
+  OrbStateStyle,
+  OrbTheme,
+  SavedPreset,
+  ThemeFile,
+  ThemeImportResult,
+} from '../contracts';
 import { isHexColor } from '../utils/color';
-import { normaliseTheme, STATES } from './themeSchema';
+import { normalisePresets, normaliseTheme, STATES } from './themeSchema';
 
 const THEME_KEYS = new Set([
   'version',
@@ -23,13 +30,14 @@ const THEME_KEYS = new Set([
   'size',
   'glow',
   'speed',
+  'gradientEnabled',
   'gradient',
   'gradientDepth',
   'motion',
   'states',
 ]);
 
-const STATE_KEYS = new Set(['color', 'tempoScale', 'glowScale']);
+const STATE_KEYS = new Set(['color', 'color2', 'tempoScale', 'glowScale']);
 
 /** Filename for a downloaded theme, dated so several exports do not collide. */
 export function themeFilename(now = new Date()): string {
@@ -37,13 +45,19 @@ export function themeFilename(now = new Date()): string {
   return `jarvis-orb-theme-${date}.json`;
 }
 
-export function exportTheme(theme: OrbTheme, now = new Date()): string {
+export function exportTheme(
+  theme: OrbTheme,
+  presets: SavedPreset[] = [],
+  now = new Date(),
+): string {
   const file: ThemeFile = {
     app: 'jarvis-hud',
     kind: 'orb-theme',
     version: THEME_VERSION,
     exportedAt: now.toISOString(),
     theme,
+    // Omitted entirely when empty, so a plain theme file stays plain.
+    ...(presets.length ? { presets } : {}),
   };
   return `${JSON.stringify(file, null, 2)}\n`;
 }
@@ -136,6 +150,7 @@ export function importTheme(json: string): ThemeImportResult {
     message,
     warnings: [],
     theme: null,
+    presets: [],
   });
 
   if (!json.trim()) return fail('Nothing to import.');
@@ -167,23 +182,30 @@ export function importTheme(json: string): ThemeImportResult {
 
   // Version lives on the theme; the envelope carries a copy for readability.
   const version = (candidate as Partial<OrbTheme>).version ?? envelope.version;
-  if (version !== THEME_VERSION) {
+  const upgraded = version === 1;
+  if (version !== THEME_VERSION && !upgraded) {
     return fail(
       `That theme is version ${String(version ?? 'unknown')}; this HUD reads version ${THEME_VERSION}.`,
     );
   }
 
-  const applied = normaliseTheme({ ...(candidate as object), version: THEME_VERSION });
-  const warnings = describeRepairs(candidate, applied);
+  // normaliseTheme migrates a version 1 file rather than discarding it, so an
+  // older export keeps working — and says so.
+  const applied = normaliseTheme(candidate);
+  const warnings = upgraded ? [] : describeRepairs(candidate, applied);
+  if (upgraded) {
+    warnings.push(`Upgraded from version 1 — its derived second colour is now editable.`);
+  }
 
-  return {
-    ok: true,
-    message: warnings.length
+  const presets = normalisePresets(envelope.presets);
+  const parts = [
+    warnings.length
       ? `Theme applied with ${warnings.length} adjustment${warnings.length === 1 ? '' : 's'}.`
       : 'Theme applied.',
-    warnings,
-    theme: applied,
-  };
+    presets.length ? `${presets.length} preset${presets.length === 1 ? '' : 's'} merged.` : '',
+  ].filter(Boolean);
+
+  return { ok: true, message: parts.join(' '), warnings, theme: applied, presets };
 }
 
 /** Shapes the HUD knows about, used by the tests to keep the two in step. */

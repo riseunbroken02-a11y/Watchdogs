@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hexToHsl, hslToHex, isHexColor, parseHex, shift, toRgba } from '../utils/color';
-import { gradientShift } from '../config/orb.config';
+import { legacyGradientShift } from '../config/orb.config';
 
 describe('colour helpers', () => {
   it('parses #rgb and #rrggbb, with or without the hash', () => {
@@ -40,8 +40,8 @@ describe('colour helpers', () => {
     expect(shift('#ffffff', 0, 90)).not.toBe('#000000');
   });
 
-  it('every gradient style produces a usable second stop for every swatch', () => {
-    for (const [style, { hue, lightness }] of Object.entries(gradientShift)) {
+  it('every legacy gradient style produces a usable second stop for every swatch', () => {
+    for (const [style, { hue, lightness }] of Object.entries(legacyGradientShift)) {
       for (const base of ['#22d3ee', '#f87171', '#ffffff', '#101010']) {
         const second = shift(base, hue, lightness);
         expect(isHexColor(second), `${style} on ${base}`).toBe(true);
@@ -49,8 +49,10 @@ describe('colour helpers', () => {
     }
   });
 
-  it('solid leaves the colour untouched', () => {
-    expect(shift('#22d3ee', gradientShift.solid.hue, gradientShift.solid.lightness)).toBe('#22d3ee');
+  it('a zero shift leaves the colour untouched', () => {
+    expect(
+      shift('#22d3ee', legacyGradientShift.solid.hue, legacyGradientShift.solid.lightness),
+    ).toBe('#22d3ee');
   });
 
   it('toRgba clamps alpha and falls back for a bad colour', () => {

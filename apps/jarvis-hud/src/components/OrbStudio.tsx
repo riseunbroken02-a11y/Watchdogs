@@ -7,11 +7,18 @@ import {
   ranges,
   swatches,
 } from '../config/orb.config';
-import type { CoreState, GradientStyle, MotionStyle, ThemeImportResult } from '../contracts';
+import type {
+  ColorSlot,
+  CoreState,
+  GradientStyle,
+  MotionStyle,
+  ThemeImportResult,
+} from '../contracts';
+import { PresetLibrary } from './PresetLibrary';
 import { createThemeTransfer } from '../adapters/local/themeTransfer';
 import { themeFilename } from '../kernel/themeSerializer';
 import { palette } from '../config/jarvis.config';
-import { useAppearance, useAppearanceStore } from '../state/useAppearance';
+import { useAppearance, useAppearanceStore, usePresets } from '../state/useAppearance';
 import { ShapeGlyph } from './ShapeGlyph';
 import { ColorField, Segmented, Slider, Swatches } from './StudioControls';
 import './OrbStudio.css';
@@ -49,9 +56,14 @@ export const OrbStudio = memo(function OrbStudio({
 }: OrbStudioProps) {
   const store = useAppearanceStore();
   const theme = useAppearance();
+  const library = usePresets();
   const transfer = useMemo(() => createThemeTransfer(), []);
   const [editing, setEditing] = useState<CoreState>(coreState);
   const [lastDriven, setLastDriven] = useState(coreState);
+
+  /** null = closed, 'export' = showing the JSON, 'import' = awaiting a paste. */
+  /** Which of the two colours the picker and swatches are editing. */
+  const [slot, setSlot] = useState<ColorSlot>('primary');
 
   /** null = closed, 'export' = showing the JSON, 'import' = awaiting a paste. */
   const [pane, setPane] = useState<'export' | 'import' | null>(null);
@@ -87,7 +99,12 @@ export const OrbStudio = memo(function OrbStudio({
     message,
     warnings,
     theme: null,
+    presets: [],
   });
+
+  const slotColor = slot === 'primary' ? style.color : style.color2;
+  const setSlotColor = (color: string) =>
+    store.patchState(editing, slot === 'primary' ? { color } : { color2: color });
 
   const handleCopy = async () => {
     const json = store.exportTheme();
@@ -216,21 +233,40 @@ export const OrbStudio = memo(function OrbStudio({
           <p className="jv-studio__legend">
             <span className="jv-studio__legend-text">GRADIENT</span>
           </p>
-          <Segmented<GradientStyle>
-            options={gradientStyles}
-            value={theme.gradient}
-            wrap
-            onChange={(gradient) => store.patch({ gradient })}
-          />
-          <Slider
-            label={ranges.gradientDepth.label}
-            value={theme.gradientDepth}
-            min={ranges.gradientDepth.min}
-            max={ranges.gradientDepth.max}
-            step={ranges.gradientDepth.step}
-            format={percent}
-            onChange={(gradientDepth) => store.patch({ gradientDepth })}
-          />
+          <button
+            type="button"
+            className="jv-toggle"
+            aria-pressed={theme.gradientEnabled}
+            onClick={() => store.patch({ gradientEnabled: !theme.gradientEnabled })}
+            title="Off draws the core in the primary colour alone"
+          >
+            <span className="jv-toggle__track">
+              <span className="jv-toggle__knob" />
+            </span>
+            <span className="jv-toggle__label">
+              GRADIENT {theme.gradientEnabled ? 'ON' : 'OFF'}
+            </span>
+          </button>
+
+          <div className={theme.gradientEnabled ? '' : 'jv-studio__disabled'}>
+            <Segmented<GradientStyle>
+              options={gradientStyles}
+              value={theme.gradient}
+              wrap
+              onChange={(gradient) => store.patch({ gradient })}
+            />
+          </div>
+          <div className={theme.gradientEnabled ? '' : 'jv-studio__disabled'}>
+            <Slider
+              label={ranges.gradientDepth.label}
+              value={theme.gradientDepth}
+              min={ranges.gradientDepth.min}
+              max={ranges.gradientDepth.max}
+              step={ranges.gradientDepth.step}
+              format={percent}
+              onChange={(gradientDepth) => store.patch({ gradientDepth })}
+            />
+          </div>
           <Slider
             label={ranges.glow.label}
             value={theme.glow}
@@ -292,12 +328,36 @@ export const OrbStudio = memo(function OrbStudio({
               : `Editing ${editing.toUpperCase()} — a command owns the core, so preview is paused.`}
           </p>
 
-          <ColorField value={style.color} onChange={(color) => store.patchState(editing, { color })} />
-          <Swatches
-            colors={swatches}
-            value={style.color}
-            onPick={(color) => store.patchState(editing, { color })}
-          />
+          <div className="jv-slotpair" role="group" aria-label="Colour slot">
+            {(
+              [
+                ['primary', 'PRIMARY', style.color],
+                ['secondary', 'SECONDARY', style.color2],
+              ] as [ColorSlot, string, string][]
+            ).map(([id, label, value]) => (
+              <button
+                key={id}
+                type="button"
+                className="jv-slot"
+                aria-pressed={slot === id}
+                onClick={() => setSlot(id)}
+                title={
+                  id === 'primary'
+                    ? 'Drives the whole HUD tint'
+                    : 'The gradient’s second stop — unused while the gradient is off'
+                }
+              >
+                <span className="jv-slot__chip" style={{ '--jv-chip': value } as React.CSSProperties} />
+                <span className="jv-slot__text">
+                  <span className="jv-slot__name">{label}</span>
+                  <span className="jv-slot__hex">{value}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <ColorField value={slotColor} onChange={setSlotColor} />
+          <Swatches colors={swatches} value={slotColor} onPick={setSlotColor} />
 
           <div className="jv-studio__grid2">
             <Slider
@@ -327,6 +387,14 @@ export const OrbStudio = memo(function OrbStudio({
           >
             RESET {editing.toUpperCase()}
           </button>
+        </section>
+
+        {/* ------------------------------------------------------- library */}
+        <section className="jv-studio__section">
+          <p className="jv-studio__legend">
+            <span className="jv-studio__legend-text">LIBRARY</span>
+          </p>
+          <PresetLibrary presets={library} />
         </section>
 
         {/* ------------------------------------------------------ transfer */}

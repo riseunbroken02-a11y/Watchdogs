@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { animation, palette } from '../config/jarvis.config';
-import { gradientShift } from '../config/orb.config';
 import type { CoreState, OrbTheme } from '../contracts';
-import { shift, toRgba } from '../utils/color';
+import { toRgba } from '../utils/color';
 
 /**
  * Pushes the palette and the orb theme into CSS custom properties.
@@ -48,14 +47,17 @@ export function useThemeVars(state: CoreState, theme: OrbTheme) {
     const speed = theme.speed * style.tempoScale;
     const glow = theme.glow * style.glowScale;
 
-    const { hue, lightness } = gradientShift[theme.gradient];
-    const secondary =
-      theme.gradient === 'solid'
-        ? style.color
-        : shift(style.color, hue * theme.gradientDepth, lightness * theme.gradientDepth);
+    // Depth decides how much of the secondary actually shows. With the
+    // gradient off, the second stop simply is the primary, which is what makes
+    // every shape fall back to a flat accent without any of them knowing.
+    const blend = theme.gradientEnabled ? Math.round(theme.gradientDepth * 100) : 0;
 
     root.style.setProperty('--jv-state', style.color);
-    root.style.setProperty('--jv-state-2', secondary);
+    root.style.setProperty('--jv-state-raw-2', style.color2);
+    root.style.setProperty(
+      '--jv-state-2',
+      `color-mix(in srgb, ${style.color2} ${blend}%, ${style.color})`,
+    );
     root.style.setProperty('--jv-state-glow', toRgba(style.color, 0.3 * Math.min(1.6, glow)));
     root.style.setProperty('--jv-glow', glow.toFixed(3));
     root.style.setProperty('--jv-orb-size', theme.size.toFixed(3));
@@ -63,7 +65,7 @@ export function useThemeVars(state: CoreState, theme: OrbTheme) {
     root.style.setProperty('--jv-rotate', `${(animation.rotationSeconds * speed).toFixed(2)}s`);
 
     root.dataset.coreState = state;
-    root.dataset.gradient = theme.gradient;
+    root.dataset.gradient = theme.gradientEnabled ? theme.gradient : 'off';
     root.dataset.motion = theme.motion;
   }, [state, theme]);
 }

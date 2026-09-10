@@ -38,6 +38,7 @@
 
   /* Orb theme. Written by useThemeVars from the appearance store. */
   --jv-state-2: var(--jv-state);
+  --jv-state-raw-2: var(--jv-state);
   --jv-glow: 1;
   --jv-orb-size: 1;
 

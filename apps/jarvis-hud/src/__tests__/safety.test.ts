@@ -164,6 +164,7 @@ describe('forbidden capabilities are absent from the source', () => {
     expect(Object.keys(file.theme).sort()).toEqual([
       'gradient',
       'gradientDepth',
+      'gradientEnabled',
       'glow',
       'motion',
       'shape',

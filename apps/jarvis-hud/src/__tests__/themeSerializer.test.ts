@@ -9,7 +9,7 @@ const parse = (json: string) => JSON.parse(json);
 
 describe('export', () => {
   it('wraps the theme in an identifiable envelope', () => {
-    const file = parse(exportTheme(cloneDefaultTheme(), new Date('2026-09-10T12:00:00Z')));
+    const file = parse(exportTheme(cloneDefaultTheme(), [], new Date('2026-09-10T12:00:00Z')));
 
     expect(file.app).toBe('jarvis-hud');
     expect(file.kind).toBe('orb-theme');
@@ -43,7 +43,8 @@ describe('import — round trip', () => {
       size: 1.2,
       glow: 1.6,
       speed: 0.8,
-      gradient: 'aurora',
+      gradientEnabled: true,
+      gradient: 'conic',
       gradientDepth: 0.85,
       motion: 'pulse',
     };

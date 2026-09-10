@@ -9,16 +9,26 @@
 import type { CoreShapeId } from '../types';
 import type { CoreState } from './core';
 
-/** How the second colour stop is derived from the state colour. */
-export type GradientStyle = 'solid' | 'radial' | 'dual' | 'aurora';
+/**
+ * How the two colour stops are blended.
+ *
+ * Whether there is a gradient at all is `OrbTheme.gradientEnabled`; this only
+ * says where each stop lands once there is one.
+ */
+export type GradientStyle = 'radial' | 'linear' | 'conic' | 'dual';
 
 /** How the core moves. */
 export type MotionStyle = 'smooth' | 'pulse' | 'orbit' | 'static';
 
+/** Which of the two colours a control is editing. */
+export type ColorSlot = 'primary' | 'secondary';
+
 /** Per-state overrides, layered on top of the base theme. */
 export interface OrbStateStyle {
-  /** Accent colour for this state, as #rrggbb. */
+  /** Primary accent for this state, as #rrggbb. Drives the whole HUD's tint. */
   color: string;
+  /** Second gradient stop, as #rrggbb. Ignored while the gradient is off. */
+  color2: string;
   /** Multiplier on the base speed. Lower is faster. */
   tempoScale: number;
   /** Multiplier on the base glow. */
@@ -35,8 +45,10 @@ export interface OrbTheme {
   glow: number;
   /** Animation duration multiplier. Lower is faster. */
   speed: number;
+  /** Master switch. Off means the core is drawn in the primary colour alone. */
+  gradientEnabled: boolean;
   gradient: GradientStyle;
-  /** How far the second gradient stop departs from the first, 0..1. */
+  /** How strongly the secondary shows through, 0..1. */
   gradientDepth: number;
   motion: MotionStyle;
   states: Record<CoreState, OrbStateStyle>;
@@ -56,7 +68,19 @@ export interface AppearanceStorage {
   readonly persistent: boolean;
   load(): OrbTheme | null;
   save(theme: OrbTheme): boolean;
+  /** The operator's saved presets. Empty array when there are none. */
+  loadPresets(): SavedPreset[];
+  savePresets(presets: SavedPreset[]): boolean;
   clear(): void;
+}
+
+/** A theme the operator saved under their own name. */
+export interface SavedPreset {
+  id: string;
+  label: string;
+  createdAt: number;
+  updatedAt: number;
+  theme: OrbTheme;
 }
 
 export interface OrbPreset {
@@ -82,6 +106,8 @@ export interface ThemeFile {
   /** ISO timestamp, informational only. */
   exportedAt: string;
   theme: OrbTheme;
+  /** Present when the export carried the operator's saved presets too. */
+  presets?: SavedPreset[];
 }
 
 export interface ThemeImportResult {
@@ -95,6 +121,8 @@ export interface ThemeImportResult {
   warnings: string[];
   /** Null when ok is false. */
   theme: OrbTheme | null;
+  /** Presets the file carried, already validated. */
+  presets: SavedPreset[];
 }
 
 /**
@@ -128,7 +156,24 @@ export interface AppearanceStore {
   reset(): void;
   /** Restores one state to its default. */
   resetState(state: CoreState): void;
-  /** The current theme as a pretty-printed JSON file, ready to save or paste. */
+  /* ------------------------------------------------------- preset library */
+
+  /** The operator's saved presets, newest first. */
+  getPresets(): SavedPreset[];
+  /** Snapshots the current theme under a name. Returns the new preset. */
+  savePreset(label: string): SavedPreset;
+  /** Applies a saved preset. No-op for an unknown id. */
+  loadPreset(id: string): boolean;
+  /** Copies a saved preset under a new name. */
+  duplicatePreset(id: string): SavedPreset | null;
+  deletePreset(id: string): boolean;
+
+  /* ------------------------------------------------------------- transfer */
+
+  /**
+   * The current theme as a pretty-printed JSON file, ready to save or paste.
+   * Saved presets ride along when there are any.
+   */
   exportTheme(): string;
   /**
    * Replaces the theme from exported JSON.

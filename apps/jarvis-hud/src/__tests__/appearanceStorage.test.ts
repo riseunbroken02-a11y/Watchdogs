@@ -117,6 +117,7 @@ describe('local appearance storage — the one storage chokepoint', () => {
     expect(Object.keys(written).sort()).toEqual([
       'gradient',
       'gradientDepth',
+      'gradientEnabled',
       'glow',
       'motion',
       'shape',

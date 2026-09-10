@@ -6,10 +6,15 @@
  * operator their theme will not survive a reload.
  */
 
-import type { AppearanceStorage, OrbTheme } from '../../contracts';
+import type { AppearanceStorage, OrbTheme, SavedPreset } from '../../contracts';
 
-export function createMemoryAppearanceStorage(initial: OrbTheme | null = null): AppearanceStorage {
+export function createMemoryAppearanceStorage(
+  initial: OrbTheme | null = null,
+  initialPresets: SavedPreset[] = [],
+): AppearanceStorage {
   let theme = initial;
+  let presets = initialPresets;
+
   return {
     id: 'memory',
     persistent: false,
@@ -17,6 +22,11 @@ export function createMemoryAppearanceStorage(initial: OrbTheme | null = null): 
     save(next) {
       theme = next;
       // Reports false deliberately: it did not reach anywhere durable.
+      return false;
+    },
+    loadPresets: () => presets,
+    savePresets(next) {
+      presets = next;
       return false;
     },
     clear() {
