@@ -110,6 +110,36 @@ anything it does not mention alone, so your size stays put.
 `RESET <STATE>` restores one state; `RESET ALL` returns to the shipped default,
 which reproduces the phase 1–4 look exactly.
 
+**Export and import.** The **TRANSFER** section at the bottom moves a theme in
+and out as JSON:
+
+| Button | What it does |
+| --- | --- |
+| `COPY JSON` | Copies the theme to the clipboard. If the browser refuses (no secure context, permission denied) it shows the JSON pre-selected so you can copy it by hand |
+| `DOWNLOAD` | Saves `jarvis-orb-theme-YYYY-MM-DD.json` |
+| `PASTE JSON` | Opens a box to paste a theme into, then APPLY |
+| `LOAD FILE` | Picks an exported `.json` file |
+
+The file carries an envelope — `app`, `kind`, `version`, `exportedAt` and the
+theme — so an import can tell a Jarvis theme from any other JSON and refuse the
+second with a useful message rather than silently producing a default.
+
+An import is never silently lossy. A value outside its range is clamped, an
+unknown shape or gradient is ignored, and **everything that did not survive is
+listed** under the result:
+
+```
+Theme applied with 3 adjustments.
+ · Ignored unknown field(s): author
+ · Unknown shape "triangle" — kept reactor
+ · glow 99 is outside 0–2 — clamped to 2
+```
+
+A file that cannot be read at all — malformed JSON, another app's export, a
+different schema version — is refused outright and **the live theme is left
+exactly as it was**. A bare theme (what sits in browser storage) is accepted
+too, so copying that out and pasting it back works.
+
 **Persistence.** The theme is saved in this browser under a single key,
 `jarvis.hud.orb.theme`. It holds appearance only — no identifiers, no history,
 no credentials. When a browser refuses durable storage (a private window, a full
@@ -239,7 +269,7 @@ apps/jarvis-hud/src/
 │                  integrations.config.ts (flags + action policy) ·
 │                  orb.config.ts (theme defaults, ranges, presets)
 ├── utils/         small shared helpers
-└── __tests__/     16 suites, 178 tests
+└── __tests__/     18 suites, 217 tests
 ```
 
 Dependencies point inward only: UI → kernel → contracts, adapters → contracts.

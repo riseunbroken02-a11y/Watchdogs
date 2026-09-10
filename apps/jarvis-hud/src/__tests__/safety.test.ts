@@ -29,6 +29,11 @@ import { createMockConnectors } from '../adapters/mock/mockConnectors';
  * forbidden everywhere else. What it stores is asserted separately in
  * appearanceStorage.test.ts: appearance only, under one key, no identifiers.
  *
+ * The theme export/import adds a third chokepoint,
+ * `adapters/local/themeTransfer.ts`, for the clipboard, the download folder and
+ * reading a file the operator picked. Every one of those is started by a button
+ * press and carries appearance only.
+ *
  * Everything else phase 3 forbade is still forbidden.
  */
 
@@ -39,6 +44,9 @@ const NETWORK_CHOKEPOINT = 'adapters/live/httpClient.ts';
 
 /** The one file allowed to touch browser storage, relative to src/. */
 const STORAGE_CHOKEPOINT = 'adapters/local/localAppearanceStorage.ts';
+
+/** The one file allowed to move data in or out of the page, relative to src/. */
+const TRANSFER_CHOKEPOINT = 'adapters/local/themeTransfer.ts';
 
 function sourceFiles(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -125,6 +133,45 @@ describe('forbidden capabilities are absent from the source', () => {
     const code = readFileSync(join(SRC, STORAGE_CHOKEPOINT), 'utf8');
     // One try/catch per access: probe, load, save, clear.
     expect((code.match(/try \{/g) ?? []).length).toBeGreaterThanOrEqual(4);
+  });
+
+  it(`reaches the clipboard from ${TRANSFER_CHOKEPOINT} and nowhere else`, () => {
+    const callers = files
+      .filter((f) => /navigator\.clipboard/.test(codeOf(f)))
+      .map((f) => f.replace(SRC, ''));
+    expect(callers).toEqual([TRANSFER_CHOKEPOINT]);
+  });
+
+  it(`writes downloads from ${TRANSFER_CHOKEPOINT} and nowhere else`, () => {
+    const callers = files
+      .filter((f) => /createObjectURL|\.download\s*=/.test(codeOf(f)))
+      .map((f) => f.replace(SRC, ''));
+    expect(callers).toEqual([TRANSFER_CHOKEPOINT]);
+  });
+
+  it('the transfer chokepoint always releases its object URLs', () => {
+    const code = readFileSync(join(SRC, TRANSFER_CHOKEPOINT), 'utf8');
+    // Released in a finally, so a throwing click cannot leak the blob.
+    expect(code).toMatch(/finally\s*\{[\s\S]*revokeObjectURL/);
+  });
+
+  it('an exported theme carries appearance and nothing else', async () => {
+    const { exportTheme } = await import('../kernel/themeSerializer');
+    const { cloneDefaultTheme } = await import('../config/orb.config');
+    const file = JSON.parse(exportTheme(cloneDefaultTheme()));
+
+    expect(Object.keys(file).sort()).toEqual(['app', 'exportedAt', 'kind', 'theme', 'version']);
+    expect(Object.keys(file.theme).sort()).toEqual([
+      'gradient',
+      'gradientDepth',
+      'glow',
+      'motion',
+      'shape',
+      'size',
+      'speed',
+      'states',
+      'version',
+    ].sort());
   });
 
   it('the network chokepoint always times out and never sends ambient cookies', () => {

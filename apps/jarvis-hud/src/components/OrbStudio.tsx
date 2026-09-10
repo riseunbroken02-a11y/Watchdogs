@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { coreShapes } from '../config/jarvis.config';
 import {
   gradientStyles,
@@ -7,7 +7,10 @@ import {
   ranges,
   swatches,
 } from '../config/orb.config';
-import type { CoreState, GradientStyle, MotionStyle } from '../contracts';
+import type { CoreState, GradientStyle, MotionStyle, ThemeImportResult } from '../contracts';
+import { createThemeTransfer } from '../adapters/local/themeTransfer';
+import { themeFilename } from '../kernel/themeSerializer';
+import { palette } from '../config/jarvis.config';
 import { useAppearance, useAppearanceStore } from '../state/useAppearance';
 import { ShapeGlyph } from './ShapeGlyph';
 import { ColorField, Segmented, Slider, Swatches } from './StudioControls';
@@ -46,8 +49,16 @@ export const OrbStudio = memo(function OrbStudio({
 }: OrbStudioProps) {
   const store = useAppearanceStore();
   const theme = useAppearance();
+  const transfer = useMemo(() => createThemeTransfer(), []);
   const [editing, setEditing] = useState<CoreState>(coreState);
   const [lastDriven, setLastDriven] = useState(coreState);
+
+  /** null = closed, 'export' = showing the JSON, 'import' = awaiting a paste. */
+  const [pane, setPane] = useState<'export' | 'import' | null>(null);
+  const [draft, setDraft] = useState('');
+  const [status, setStatus] = useState<ThemeImportResult | null>(null);
+  const areaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   // While a command drives the core, follow it: the panel should show what is
   // on screen rather than a state the operator is no longer looking at.
@@ -70,6 +81,58 @@ export const OrbStudio = memo(function OrbStudio({
 
   const storage = store.storageStatus();
   const style = theme.states[editing];
+
+  const note = (ok: boolean, message: string, warnings: string[] = []): ThemeImportResult => ({
+    ok,
+    message,
+    warnings,
+    theme: null,
+  });
+
+  const handleCopy = async () => {
+    const json = store.exportTheme();
+    const copied = transfer.canCopy && (await transfer.copy(json));
+    if (copied) {
+      setStatus(note(true, 'Theme copied to the clipboard.'));
+      return;
+    }
+    // No clipboard, or permission refused: show the JSON so it can still be
+    // selected by hand rather than leaving the operator with nothing.
+    setDraft(json);
+    setPane('export');
+    setStatus(note(true, 'Clipboard unavailable — select the JSON below and copy it.'));
+    requestAnimationFrame(() => areaRef.current?.select());
+  };
+
+  const handleDownload = () => {
+    const ok = transfer.download(themeFilename(), store.exportTheme());
+    setStatus(
+      ok
+        ? note(true, `Saved as ${themeFilename()}.`)
+        : note(false, 'This browser blocked the download.'),
+    );
+  };
+
+  const handleImport = (json: string) => {
+    const result = store.importTheme(json);
+    setStatus(result);
+    if (result.ok) {
+      setPane(null);
+      setDraft('');
+    }
+  };
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    const read = await transfer.readFile(file);
+    if (!read.ok) {
+      setStatus(note(false, read.error));
+      return;
+    }
+    handleImport(read.text);
+  };
+
+  const statusTone = status ? (status.ok ? palette.success : palette.danger) : palette.textDim;
 
   /** Selecting a state both edits it and shows it on the core. */
   const selectState = (next: CoreState) => {
@@ -264,6 +327,115 @@ export const OrbStudio = memo(function OrbStudio({
           >
             RESET {editing.toUpperCase()}
           </button>
+        </section>
+
+        {/* ------------------------------------------------------ transfer */}
+        <section className="jv-studio__section">
+          <p className="jv-studio__legend">
+            <span className="jv-studio__legend-text">TRANSFER</span>
+          </p>
+
+          <div className="jv-transfer">
+            <div className="jv-transfer__row">
+              <button type="button" className="jv-transfer__btn" onClick={handleCopy}>
+                COPY JSON
+              </button>
+              <button type="button" className="jv-transfer__btn" onClick={handleDownload}>
+                DOWNLOAD
+              </button>
+            </div>
+
+            <div className="jv-transfer__row">
+              <button
+                type="button"
+                className="jv-transfer__btn"
+                aria-pressed={pane === 'import'}
+                onClick={() => {
+                  const next = pane === 'import' ? null : 'import';
+                  setPane(next);
+                  setDraft('');
+                  setStatus(null);
+                  if (next) requestAnimationFrame(() => areaRef.current?.focus());
+                }}
+              >
+                PASTE JSON
+              </button>
+              <button
+                type="button"
+                className="jv-transfer__btn"
+                onClick={() => fileRef.current?.click()}
+              >
+                LOAD FILE
+              </button>
+            </div>
+
+            <input
+              ref={fileRef}
+              className="jv-transfer__file"
+              type="file"
+              accept="application/json,.json"
+              aria-label="Load a theme file"
+              onChange={(e) => {
+                void handleFile(e.target.files?.[0]);
+                // Reset so picking the same file twice fires again.
+                e.target.value = '';
+              }}
+            />
+
+            {pane ? (
+              <textarea
+                ref={areaRef}
+                className="jv-transfer__area"
+                value={draft}
+                readOnly={pane === 'export'}
+                spellCheck={false}
+                aria-label={pane === 'export' ? 'Theme JSON' : 'Paste a theme'}
+                placeholder={pane === 'import' ? 'Paste an exported theme here…' : undefined}
+                onChange={(e) => setDraft(e.target.value)}
+              />
+            ) : null}
+
+            {pane === 'import' ? (
+              <div className="jv-transfer__row">
+                <button
+                  type="button"
+                  className="jv-transfer__btn"
+                  disabled={draft.trim().length === 0}
+                  onClick={() => handleImport(draft)}
+                >
+                  APPLY
+                </button>
+                <button
+                  type="button"
+                  className="jv-transfer__btn"
+                  onClick={() => {
+                    setPane(null);
+                    setDraft('');
+                    setStatus(null);
+                  }}
+                >
+                  CANCEL
+                </button>
+              </div>
+            ) : null}
+
+            {status ? (
+              <div
+                className="jv-transfer__status"
+                style={{ '--jv-tone': statusTone } as React.CSSProperties}
+                role="status"
+              >
+                <span className="jv-transfer__message">{status.message}</span>
+                {status.warnings.length ? (
+                  <ul className="jv-transfer__warnings">
+                    {status.warnings.map((warning, i) => (
+                      <li key={i}>{warning}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </section>
       </div>
 

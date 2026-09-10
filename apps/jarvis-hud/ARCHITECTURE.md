@@ -13,7 +13,8 @@ interface.
 > Two things enforce that in code rather than by convention:
 > `src/adapters/live/httpClient.ts` is the only file allowed to call `fetch`,
 > `src/adapters/local/localAppearanceStorage.ts` is the only one allowed to
-> touch browser storage, and `src/kernel/approvalGate.ts` is the only route to
+> touch browser storage, `src/adapters/local/themeTransfer.ts` the only one
+> allowed to reach the clipboard or the download folder, and `src/kernel/approvalGate.ts` is the only route to
 > any action that is not a plain read. `src/__tests__/safety.test.ts` asserts both, plus the shipped
 > defaults, and scans the source for everything that stays forbidden.
 
@@ -79,10 +80,20 @@ there, so a corrupt save or a hand-edited key can never put the HUD into an
 unrenderable state. `normaliseTheme()` repairs field by field and discards a
 save from an older schema version rather than half-applying it.
 
-`src/adapters/local/localAppearanceStorage.ts` is the only file allowed to touch
-browser storage, the same single-chokepoint pattern as the network client. It
-stores appearance only, under one key, and every access is wrapped: a private
-window or a full quota costs the operator persistence, never the interface.
+`src/kernel/themeSchema.ts` holds that validation on its own, so the store and
+the serialiser can both depend on it without depending on each other.
+
+`src/kernel/themeSerializer.ts` turns a theme into a portable file and back.
+Export wraps it in an envelope (`app`, `kind`, `version`, `exportedAt`) so an
+import can refuse an unrelated JSON file with a useful message. Import repairs
+what is repairable, refuses what is not, and reports every adjustment — a paste
+that quietly produced the default theme would be worse than an error.
+
+Two adapters carry the I/O, each a single chokepoint like the network client:
+`src/adapters/local/localAppearanceStorage.ts` for browser storage (appearance
+only, one key, every access wrapped) and `src/adapters/local/themeTransfer.ts`
+for the clipboard, downloads and reading a picked file. All of it is
+operator-initiated and carries appearance only.
 
 Changes reach the screen through CSS custom properties rather than React
 re-renders, so dragging a slider repaints the orb without re-mounting anything.
@@ -353,6 +364,8 @@ seconds that make it readable on screen.
 | `jarvisRuntime.test.ts` | snapshot behaviour, busy semantics, idempotent start |
 | `appearanceStore.test.ts` | theme editing, clamping, presets, reset, repair of corrupt saves |
 | `appearanceStorage.test.ts` | round-trip, quota failure, blocked storage, what is stored |
+| `themeSerializer.test.ts` | export envelope, round-trip of every preset, refusals, reported repairs |
+| `themeTransfer.test.ts` | clipboard fallback, object-URL release, unreadable file |
 | `color.test.ts` | hex ⇄ HSL round-trip and the gradient derivations |
 | `safety.test.ts` | mock mode on, and a source scan for forbidden capabilities |
 
@@ -374,6 +387,7 @@ The phase-3 guarantees, and where each is enforced:
 | No shell or filesystem writes | source scan |
 | No secrets in source or environment | source scan for credential literals and `process.env` |
 | Browser storage only in the appearance chokepoint | source scan, plus a test asserting it stores appearance under one key and nothing else |
+| Clipboard and downloads only in the transfer chokepoint | source scan, plus a test asserting an export carries appearance and nothing else |
 
 The source scan strips comments before matching, so documentation that
 *mentions* a forbidden API never trips it — only real code does.

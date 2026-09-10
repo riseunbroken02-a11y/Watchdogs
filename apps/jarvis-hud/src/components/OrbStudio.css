@@ -264,3 +264,103 @@
 @media (max-width: 1200px) {
   .jv-studio { width: min(340px, 96vw); }
 }
+
+/* ---- transfer ----------------------------------------------------------- */
+
+.jv-transfer { display: grid; gap: 7px; }
+
+.jv-transfer__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.jv-transfer__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: var(--jv-text-dim);
+  background: rgba(56, 189, 248, 0.03);
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  border-radius: var(--jv-radius);
+  white-space: nowrap;
+  transition: all var(--jv-transition) var(--jv-ease);
+}
+.jv-transfer__btn:hover:not(:disabled) {
+  color: var(--jv-state);
+  border-color: color-mix(in srgb, var(--jv-state) 45%, transparent);
+  transform: translateY(-1px);
+}
+.jv-transfer__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.jv-transfer__btn[aria-pressed='true'] {
+  color: var(--jv-state);
+  border-color: var(--jv-state);
+  background: color-mix(in srgb, var(--jv-state) 12%, transparent);
+}
+.jv-transfer__btn:focus-visible { outline: 1px solid var(--jv-state); outline-offset: 2px; }
+
+.jv-transfer__file { display: none; }
+
+.jv-transfer__area {
+  width: 100%;
+  min-height: 96px;
+  max-height: 200px;
+  padding: 8px 9px;
+  font-family: var(--jv-mono);
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: var(--jv-text);
+  background: rgba(4, 12, 22, 0.7);
+  border: 1px solid var(--jv-panel-border);
+  border-radius: var(--jv-radius);
+  outline: none;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+.jv-transfer__area:focus {
+  border-color: color-mix(in srgb, var(--jv-state) 55%, transparent);
+  box-shadow: 0 0 20px -10px var(--jv-state);
+}
+
+.jv-transfer__status {
+  display: grid;
+  gap: 3px;
+  padding: 7px 9px;
+  border-radius: var(--jv-radius);
+  border: 1px solid color-mix(in srgb, var(--jv-tone) 35%, transparent);
+  background: color-mix(in srgb, var(--jv-tone) 7%, transparent);
+  animation: jv-transfer-in 220ms var(--jv-ease) both;
+}
+
+@keyframes jv-transfer-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.jv-transfer__message {
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: var(--jv-tone);
+  font-weight: 600;
+}
+
+.jv-transfer__warnings {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1px;
+  font-family: var(--jv-mono);
+  font-size: 8.5px;
+  line-height: 1.45;
+  color: var(--jv-text-dim);
+  max-height: 96px;
+  overflow-y: auto;
+}
+.jv-transfer__warnings li::before { content: '· '; color: var(--jv-text-faint); }

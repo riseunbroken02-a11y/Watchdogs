@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAppearanceStore, normaliseTheme } from '../kernel/appearanceStore';
+import { createAppearanceStore } from '../kernel/appearanceStore';
+import { normaliseTheme } from '../kernel/themeSchema';
 import { createMemoryAppearanceStorage } from '../adapters/local/memoryAppearanceStorage';
 import { cloneDefaultTheme, presets, ranges, THEME_VERSION } from '../config/orb.config';
 import type { AppearanceStore, CoreState, OrbTheme } from '../contracts';
