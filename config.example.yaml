@@ -1,0 +1,21 @@
+# Copy to config.yaml and adjust. No secrets go in here — those are
+# environment variables (see README.md).
+
+watch_markets:
+  - BTC-EUR
+  - ETH-EUR
+
+price_alerts:
+  - market: BTC-EUR
+    above: 80000
+    below: 40000
+    pct_change: 5      # alert if price moves +/-5% between checks
+  - market: ETH-EUR
+    pct_change: 8
+
+portfolio_pct_change_alert: 5   # alert if total portfolio value moves +/-5%
+portfolio_valuation_asset: EUR
+
+check_interval_seconds: 300
+alert_email_to: you@example.com
+db_path: data/history.db
