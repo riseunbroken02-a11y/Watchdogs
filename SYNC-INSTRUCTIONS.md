@@ -18,7 +18,7 @@ next_action: korte tekst
 ---
 
 ## Waarheen syncen
-1. **Notion "AIVM Brain Sync Inbox"** (privé, veilig voor persoonlijke content) — via de Notion MCP-connector in Claude Desktop
+1. **Notion "AIVM Brain Sync Inbox"** (veiligste route voor persoonlijke content — controleer wel eerst de Notion-deelrechten van de pagina) — via de Notion MCP-connector in Claude Desktop
 2. **Deze repo** — alléén algemene, niet-gevoelige samenvattingen (de repo is publiek, zie PRIVACY.md)
 
 ## Workflow per agent-sessie
